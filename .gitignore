@@ -1,0 +1,15 @@
+# Project
+/client/dist
+/client/.angular
+/client/coverage
+/server/dist
+
+# NPM
+/client/node_modules/
+/server/node_modules/
+
+# Idea
+.idea
+.iml
+*.iml
+.vscode
