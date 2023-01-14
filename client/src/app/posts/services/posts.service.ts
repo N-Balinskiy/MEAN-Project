@@ -8,32 +8,36 @@ import { Router } from '@angular/router';
 @Injectable({providedIn: 'root'})
 export class PostsService {
   private posts: Post[] = [];
-  private postsUpdated = new Subject<Post[]>();
+  private postsUpdated = new Subject<{ posts: Post[], postsCount: number }>();
 
   constructor(private http: HttpClient, private router: Router) {
   }
 
-  getPosts(): void {
-    this.http.get<{ message: string, posts: any }>('http://localhost:3000/api/posts')
+  getPosts(postsPerPage: number, currentPage: number): void {
+    const queryParams = `?pageSize=${postsPerPage}&page=${currentPage}`;
+    this.http.get<{ message: string, posts: any, postsCount: number }>('http://localhost:3000/api/posts' + queryParams)
       .pipe(
         map((postData) => {
-          return postData.posts.map((post: any) => {
-            return {
-              title: post.title,
-              content: post.content,
-              id: post._id,
-              imagePath: post.imagePath
-            }
-          });
+          return {
+            posts: postData.posts.map((post: any) => {
+              return {
+                title: post.title,
+                content: post.content,
+                id: post._id,
+                imagePath: post.imagePath
+              }
+            }),
+            postsCount: postData.postsCount
+          };
         })
       )
-      .subscribe((transformedPosts) => {
-        this.posts = transformedPosts;
-        this.postsUpdated.next([...this.posts]);
+      .subscribe((transformedPostData) => {
+        this.posts = transformedPostData.posts;
+        this.postsUpdated.next({ posts: [...this.posts], postsCount: transformedPostData.postsCount});
       });
   }
 
-  getPostUpdateListener(): Observable<Post[]> {
+  getPostUpdateListener(): Observable<{ posts: Post[], postsCount: number }> {
     return this.postsUpdated.asObservable();
   }
 
@@ -47,10 +51,7 @@ export class PostsService {
     postData.append("content", content);
     postData.append("image", image, title);
     this.http.post<{ message: string, post: Post }>('http://localhost:3000/api/posts', postData)
-      .subscribe((responseData) => {
-        const post: Post = { id: responseData.post.id, title, content, imagePath: responseData.post.imagePath }
-        this.posts.push(post);
-        this.postsUpdated.next([...this.posts]);
+      .subscribe(() => {
         this.router.navigate(['/']);
       });
   }
@@ -68,23 +69,12 @@ export class PostsService {
     }
 
     this.http.put('http://localhost:3000/api/posts/' + id, postData)
-      .subscribe(response => {
-        const updatedPosts = [...this.posts];
-        const oldPostIndex = updatedPosts.findIndex(p => p.id === id);
-        const post: Post = { id, title, content, imagePath: "" }
-        updatedPosts[oldPostIndex] = post;
-        this.posts = updatedPosts;
-        this.postsUpdated.next([...this.posts]);
+      .subscribe( () => {
         this.router.navigate(['/']);
       });
   }
 
-  deletePost(postId: string): void {
-    this.http.delete('http://localhost:3000/api/posts/' + postId)
-      .subscribe(() => {
-          this.posts = this.posts.filter(post => post.id !== postId);
-          this.postsUpdated.next([...this.posts]);
-        }
-      );
+  deletePost(postId: string): Observable<Object> {
+    return this.http.delete('http://localhost:3000/api/posts/' + postId);
   }
 }

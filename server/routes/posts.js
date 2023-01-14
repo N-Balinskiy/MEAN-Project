@@ -26,7 +26,7 @@ const storage = multer.diskStorage({
     }
 });
 
-router.post('', multer({ storage: storage }).single('image'), (req, res) => {
+router.post('', multer({storage: storage}).single('image'), (req, res) => {
     const url = req.protocol + '://' + req.get("host");
     const post = new Post({
         title: req.body.title,
@@ -45,7 +45,7 @@ router.post('', multer({ storage: storage }).single('image'), (req, res) => {
 
 });
 
-router.put('/:id', multer({ storage: storage }).single('image'), (req, res) => {
+router.put('/:id', multer({storage: storage}).single('image'), (req, res) => {
     let imagePath = req.body.imagePath;
     if (req.file) {
         const url = req.protocol + '://' + req.get("host");
@@ -71,11 +71,23 @@ router.put('/:id', multer({ storage: storage }).single('image'), (req, res) => {
 });
 
 router.get('', (req, res) => {
-    Post.find()
+    const pageSize = +req.query.pageSize;
+    const currentPage = +req.query.page;
+    const postQuery = Post.find();
+    let fetchedPosts;
+    if (pageSize && currentPage) {
+        postQuery.skip(pageSize * (currentPage - 1)).limit(pageSize);
+    }
+    postQuery
         .then(documents => {
+            fetchedPosts = documents;
+            return Post.count();
+        })
+        .then(count => {
             res.status(200).json({
-                message: 'Posts fetched successfully!',
-                posts: documents
+                message: "Posts fetched successfully!",
+                posts: fetchedPosts,
+                postsCount: count
             });
         });
 });
