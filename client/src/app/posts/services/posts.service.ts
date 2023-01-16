@@ -4,18 +4,21 @@ import { HttpClient } from '@angular/common/http';
 
 import { Post } from '../interfaces/post.interface';
 import { Router } from '@angular/router';
+import { environment } from '../../../environments/environment';
 
 @Injectable({providedIn: 'root'})
 export class PostsService {
   private posts: Post[] = [];
   private postsUpdated = new Subject<{ posts: Post[], postsCount: number }>();
 
+  private readonly BACKEND_URL = environment.apiUrl +'/posts/';
+
   constructor(private http: HttpClient, private router: Router) {
   }
 
   getPosts(postsPerPage: number, currentPage: number): void {
     const queryParams = `?pageSize=${postsPerPage}&page=${currentPage}`;
-    this.http.get<{ message: string, posts: any, postsCount: number }>('http://localhost:3000/api/posts' + queryParams)
+    this.http.get<{ message: string, posts: any, postsCount: number }>(this.BACKEND_URL + queryParams)
       .pipe(
         map((postData) => {
           return {
@@ -43,7 +46,7 @@ export class PostsService {
   }
 
   getPost(id: string): Observable<{ _id: string, title: string, content: string, imagePath: string, creator: string }> { // TODO change this object to PostResponse interface
-    return this.http.get<{ _id: string, title: string, content: string, imagePath: string, creator: string }>('http://localhost:3000/api/posts/' + id);
+    return this.http.get<{ _id: string, title: string, content: string, imagePath: string, creator: string }>(this.BACKEND_URL + id);
   }
 
   addPost(title: string, content: string, image: File): void {
@@ -51,7 +54,7 @@ export class PostsService {
     postData.append("title", title);
     postData.append("content", content);
     postData.append("image", image, title);
-    this.http.post<{ message: string, post: Post }>('http://localhost:3000/api/posts', postData)
+    this.http.post<{ message: string, post: Post }>(this.BACKEND_URL, postData)
       .subscribe(() => {
         this.router.navigate(['/']);
       });
@@ -69,13 +72,13 @@ export class PostsService {
       postData = { id, title, content, imagePath: image, creator: null };
     }
 
-    this.http.put('http://localhost:3000/api/posts/' + id, postData)
+    this.http.put(this.BACKEND_URL + id, postData)
       .subscribe( () => {
         this.router.navigate(['/']);
       });
   }
 
   deletePost(postId: string): Observable<Object> {
-    return this.http.delete('http://localhost:3000/api/posts/' + postId);
+    return this.http.delete(this.BACKEND_URL + postId);
   }
 }

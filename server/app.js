@@ -9,7 +9,7 @@ const userRoutes = require("./routes/user");
 const app = express();
 
 mongoose.set('strictQuery',true);
-mongoose.connect("mongodb+srv://Desonancen:PALuK9I2HNWQFbWn@cluster0.zsqfhdp.mongodb.net/node-angular?retryWrites=true&w=majority")
+mongoose.connect("mongodb+srv://Desonancen:"+ process.env.MONGO_ATLAS_PW +"@cluster0.zsqfhdp.mongodb.net/node-angular?retryWrites=true&w=majority")
     .then(() => {
         console.log('Connected to db');
     })

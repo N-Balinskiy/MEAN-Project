@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { AuthData } from '../interfaces/auth-data.interface';
 import { Observable, Subject } from 'rxjs';
 import { Router } from '@angular/router';
+import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -11,6 +12,8 @@ export class AuthService {
   private authStatusListener = new Subject<boolean>();
   private tokenTimer!: NodeJS.Timer;
   private userId: string | null = '';
+
+  private readonly BACKEND_URL = environment.apiUrl +'/user/';
 
   constructor(private httpClient: HttpClient, private router: Router) {
   }
@@ -33,15 +36,17 @@ export class AuthService {
 
   createUser(email: string, password: string) {
     const authData: AuthData = { email, password };
-    this.httpClient.post("http://localhost:3000/api/user/signup", authData)
-      .subscribe(response => {
-        console.log(response)
+    this.httpClient.post(`${this.BACKEND_URL}signup`, authData)
+      .subscribe({
+        //TODO add here token and other related stuff for valid work right after signing in
+        next: () => this.router.navigate(['/']),
+        error: () => this.authStatusListener.next(false)
       });
   }
 
   login(email: string, password: string) {
     const authData: AuthData = { email, password };
-    this.httpClient.post<{ token: string, expiresIn: number, userId: string }>("http://localhost:3000/api/user/login", authData)
+    this.httpClient.post<{ token: string, expiresIn: number, userId: string }>(`${this.BACKEND_URL}login`, authData)
       .subscribe(response => {
         this.token = response.token;
         if (response.token) {
@@ -55,6 +60,8 @@ export class AuthService {
           this.saveAuthData(response.token, expirationDate, this.userId);
           this.router.navigate(['/']);
         }
+      }, error => {
+        this.authStatusListener.next(false);
       });
   }
 
