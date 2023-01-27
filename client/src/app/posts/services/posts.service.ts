@@ -1,26 +1,35 @@
-import { Injectable } from '@angular/core';
-import { map, Observable, Subject } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
-
-import { Post } from '../interfaces/post.interface';
+import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { environment } from '../../../environments/environment';
+import { map, Observable, Subject } from 'rxjs';
 
-@Injectable({providedIn: 'root'})
+import { environment } from '../../../environments/environment';
+import { AuthService } from '../../authentication/services/auth.service';
+import { Post } from '../interfaces/post.interface';
+import { PostsSocketService } from './posts-socket.service';
+
+@Injectable({ providedIn: 'root' })
 export class PostsService {
   private posts: Post[] = [];
-  private postsUpdated = new Subject<{ posts: Post[], postsCount: number }>();
+  private postsUpdated = new Subject<{ posts: Post[]; postsCount: number }>();
 
-  private readonly BACKEND_URL = environment.apiUrl +'/posts/';
+  private readonly BACKEND_URL = environment.apiUrl + '/posts/';
 
-  constructor(private http: HttpClient, private router: Router) {
+  constructor(
+    private http: HttpClient,
+    private router: Router,
+    private postsSocketService: PostsSocketService,
+    private authService: AuthService
+  ) {
+    this.observePostSocket();
   }
 
   getPosts(postsPerPage: number, currentPage: number): void {
     const queryParams = `?pageSize=${postsPerPage}&page=${currentPage}`;
-    this.http.get<{ message: string, posts: any, postsCount: number }>(this.BACKEND_URL + queryParams)
+    this.http
+      .get<{ message: string; posts: any; postsCount: number }>(this.BACKEND_URL + queryParams)
       .pipe(
-        map((postData) => {
+        map(postData => {
           return {
             posts: postData.posts.map((post: any) => {
               return {
@@ -28,57 +37,85 @@ export class PostsService {
                 content: post.content,
                 id: post._id,
                 imagePath: post.imagePath,
-                creator: post.creator
-              }
+                creator: post.creator,
+              };
             }),
-            postsCount: postData.postsCount
+            postsCount: postData.postsCount,
           };
         })
       )
-      .subscribe((transformedPostData) => {
+      .subscribe(transformedPostData => {
         this.posts = transformedPostData.posts;
-        this.postsUpdated.next({ posts: [...this.posts], postsCount: transformedPostData.postsCount});
+        this.postsUpdated.next({ posts: [...this.posts], postsCount: transformedPostData.postsCount });
       });
   }
 
-  getPostUpdateListener(): Observable<{ posts: Post[], postsCount: number }> {
+  getPostUpdateListener(): Observable<{ posts: Post[]; postsCount: number }> {
     return this.postsUpdated.asObservable();
   }
 
-  getPost(id: string): Observable<{ _id: string, title: string, content: string, imagePath: string, creator: string }> { // TODO change this object to PostResponse interface
-    return this.http.get<{ _id: string, title: string, content: string, imagePath: string, creator: string }>(this.BACKEND_URL + id);
+  getPost(id: string): Observable<{ _id: string; title: string; content: string; imagePath: string; creator: string }> {
+    // TODO change this object to PostResponse interface
+    return this.http.get<{ _id: string; title: string; content: string; imagePath: string; creator: string }>(
+      this.BACKEND_URL + id
+    );
   }
 
   addPost(title: string, content: string, image: File): void {
     const postData = new FormData();
-    postData.append("title", title);
-    postData.append("content", content);
-    postData.append("image", image, title);
-    this.http.post<{ message: string, post: Post }>(this.BACKEND_URL, postData)
-      .subscribe(() => {
-        this.router.navigate(['/']);
-      });
+    postData.append('title', title);
+    postData.append('content', content);
+    postData.append('image', image, title);
+    this.http.post<{ message: string; post: Post }>(this.BACKEND_URL, postData).subscribe(() => {
+      this.router.navigate(['/']);
+      this.postsSocketService.emitCreatePostSocket(postData);
+    });
   }
 
   updatePost(id: string, title: string, content: string, image: File | string) {
-    let postData;
-    if (typeof(image) === 'object') {
+    let postData: Post | FormData;
+    if (typeof image === 'object') {
       postData = new FormData();
-      postData.append("id", id);
-      postData.append("title", title);
-      postData.append("content", content);
-      postData.append("image", image, title);
+      postData.append('id', id);
+      postData.append('title', title);
+      postData.append('content', content);
+      postData.append('image', image, title);
     } else {
-      postData = { id, title, content, imagePath: image, creator: null };
+      postData = { id, title, content, imagePath: image, creator: '' };
     }
 
-    this.http.put(this.BACKEND_URL + id, postData)
-      .subscribe( () => {
-        this.router.navigate(['/']);
-      });
+    this.http.put(this.BACKEND_URL + id, postData).subscribe(() => {
+      this.router.navigate(['/']);
+      this.postsSocketService.emitUpdatePostSocket(postData);
+    });
   }
 
-  deletePost(postId: string): Observable<Object> {
-    return this.http.delete(this.BACKEND_URL + postId);
+  deletePost(postId: string): void {
+    let postData: Post | null = this.posts.find(post => post.id == postId) ?? null;
+    this.http.delete(this.BACKEND_URL + postId).subscribe(() => this.postsSocketService.emitDeletePostSocket(postData));
+  }
+
+  private observePostSocket() {
+    this.postsSocketService.receiveCreatePostSocket().subscribe((post: any) => {
+      console.log(`Create ${post.id} Post socket received`);
+      this.refreshPosts(post);
+    });
+
+    this.postsSocketService.receiveUpdatePostSocket().subscribe((post: any) => {
+      console.log(`Update ${post.id} Post socket received`);
+      this.refreshPosts(post);
+    });
+
+    this.postsSocketService.receiveDeletePostSocket().subscribe((post: any) => {
+      console.log(`Delete ${post.id} Post socket received`);
+      this.refreshPosts(post);
+    });
+  }
+
+  private refreshPosts(post: any) {
+    if (post.creator != this.authService.getUserId()) {
+      // TODO for now it refresh posts only for other users so when we delete post for us posts not updates
+      this.getPosts(10, 1); //TODO add dynamic info
+    }
   }
 }

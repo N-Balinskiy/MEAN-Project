@@ -1,11 +1,12 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { AuthService } from '../services/auth.service';
 import { Subscription } from 'rxjs';
+
+import { AuthService } from '../services/auth.service';
 
 @Component({
   templateUrl: 'login.component.html',
-  styleUrls: ['login.component.scss']
+  styleUrls: ['login.component.scss'],
 })
 export class LoginComponent implements OnInit, OnDestroy {
   isLoading = false;
@@ -13,16 +14,13 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   private authStatusSub!: Subscription;
 
-  constructor(private authService: AuthService) {
-  }
+  constructor(private authService: AuthService) {}
 
   ngOnInit() {
     this.initFormGroup();
-    this.authStatusSub = this.authService.getAuthStatusListener().subscribe(
-      authStatus => {
-        this.isLoading = false;
-      }
-    );
+    this.authStatusSub = this.authService.getAuthStatusListener().subscribe(() => {
+      this.isLoading = false;
+    });
   }
 
   ngOnDestroy(): void {
@@ -35,7 +33,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
 
     this.isLoading = true;
-    this.authService.login(this.form?.value.email, this.form?.value.password)
+    this.authService.login(this.form?.value.email, this.form?.value.password);
   }
 
   private initFormGroup(): void {

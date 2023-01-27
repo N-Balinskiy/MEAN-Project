@@ -1,19 +1,17 @@
+import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { SignupComponent } from './signup/signup.component';
-import { LoginComponent } from './login/login.component';
+import { ReactiveFormsModule } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { ReactiveFormsModule } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { CommonModule } from '@angular/common';
+
 import { AuthRoutingModule } from './auth-routing.module';
+import { LoginComponent } from './login/login.component';
+import { SignupComponent } from './signup/signup.component';
 
 @NgModule({
-  declarations: [
-    LoginComponent,
-    SignupComponent
-  ],
+  declarations: [LoginComponent, SignupComponent],
   imports: [
     CommonModule,
     MatInputModule,
@@ -21,7 +19,7 @@ import { AuthRoutingModule } from './auth-routing.module';
     MatProgressSpinnerModule,
     ReactiveFormsModule,
     MatButtonModule,
-    AuthRoutingModule
-  ]
+    AuthRoutingModule,
+  ],
 })
 export class AuthModule {}

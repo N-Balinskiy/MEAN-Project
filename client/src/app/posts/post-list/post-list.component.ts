@@ -1,15 +1,15 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
+import { PageEvent } from '@angular/material/paginator';
+import { Subscription } from 'rxjs';
 
+import { AuthService } from '../../authentication/services/auth.service';
 import { Post } from '../interfaces/post.interface';
 import { PostsService } from '../services/posts.service';
-import { Subscription } from 'rxjs';
-import { PageEvent } from '@angular/material/paginator';
-import { AuthService } from '../../authentication/services/auth.service';
 
 @Component({
   selector: 'mean-post-list',
   templateUrl: 'post-list.component.html',
-  styleUrls: ['post-list.component.scss']
+  styleUrls: ['post-list.component.scss'],
 })
 export class PostListComponent implements OnInit, OnDestroy {
   posts: Post[] = [];
@@ -31,18 +31,18 @@ export class PostListComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.postsService.getPosts(this.postsPerPage, this.currentPage);
     this.userId = this.authService.getUserId();
-    this.postsSubscription = this.postsService.getPostUpdateListener()
-      .subscribe((postData: { posts: Post[], postsCount: number }) => {
+    this.postsSubscription = this.postsService
+      .getPostUpdateListener()
+      .subscribe((postData: { posts: Post[]; postsCount: number }) => {
         this.isLoading = false;
         this.posts = postData.posts;
         this.totalPosts = postData.postsCount;
       });
     this.userAuthenticated = this.authService.getIsAuth();
     this.authListenerSubs = this.authService.getAuthStatusListener().subscribe(isAuthenticated => {
-        this.userAuthenticated = isAuthenticated;
-        this.userId = this.authService.getUserId();
-      }
-    );
+      this.userAuthenticated = isAuthenticated;
+      this.userId = this.authService.getUserId();
+    });
   }
 
   ngOnDestroy() {
@@ -51,12 +51,8 @@ export class PostListComponent implements OnInit, OnDestroy {
   }
 
   onDelete(postId: string): void {
-    this.isLoading = true;
-    this.postsService.deletePost(postId).subscribe({
-        next: () => this.postsService.getPosts(this.postsPerPage, this.currentPage),
-        error: () => this.isLoading = false
-      }
-    );
+    this.postsService.deletePost(postId);
+    this.postsService.getPosts(this.postsPerPage, this.currentPage);
   }
 
   onChangedPage(pageData: PageEvent) {

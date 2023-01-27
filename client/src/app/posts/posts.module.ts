@@ -1,21 +1,26 @@
-import { NgModule } from '@angular/core';
-import { PostListComponent } from './post-list/post-list.component';
-import { PostCreateComponent } from './post-create/post-create.component';
-import { ReactiveFormsModule } from '@angular/forms';
-import { MatInputModule } from '@angular/material/input';
-import { MatCardModule } from '@angular/material/card';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatButtonModule } from '@angular/material/button';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { RouterModule } from '@angular/router';
-import { MatPaginatorModule } from '@angular/material/paginator';
 import { CommonModule } from '@angular/common';
+import { NgModule } from '@angular/core';
+import { ReactiveFormsModule } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatInputModule } from '@angular/material/input';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { RouterModule } from '@angular/router';
+import { SocketIoConfig, SocketIoModule } from 'ngx-socket-io';
+
+import { PostCreateComponent } from './post-create/post-create.component';
+import { PostListComponent } from './post-list/post-list.component';
+import { PostsSocketService } from './services/posts-socket.service';
+
+const socketIoConfig: SocketIoConfig = {
+  url: 'http://localhost:3000',
+  options: {},
+};
 
 @NgModule({
-  declarations: [
-    PostListComponent,
-    PostCreateComponent
-  ],
+  declarations: [PostListComponent, PostCreateComponent],
   imports: [
     CommonModule,
     RouterModule,
@@ -26,6 +31,8 @@ import { CommonModule } from '@angular/common';
     MatButtonModule,
     MatExpansionModule,
     MatPaginatorModule,
-  ]
+    SocketIoModule.forRoot(socketIoConfig),
+  ],
+  providers: [PostsSocketService],
 })
 export class PostsModule {}
