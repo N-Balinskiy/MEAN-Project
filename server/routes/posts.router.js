@@ -1,6 +1,6 @@
 const express = require("express");
 
-const PostsController = require("../controllers/posts");
+const PostsController = require("../controllers/posts.controller");
 
 const checkAuth = require('../middlewares/check-auth');
 const extractFile = require('../middlewares/file');
