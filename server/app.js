@@ -1,21 +1,18 @@
 const path = require("path");
-const express = require('express');
+const express = require("express");
 const bodyParser = require("body-parser");
-const mongoose = require("mongoose");
+const cookieParser = require("cookie-parser");
+const cors = require("cors");
+const errorMiddleware = require("./middlewares/error.middleware");
 
 const postsRoutes = require("./routes/posts.router");
 const userRoutes = require("./routes/user.router");
 
 const app = express();
 
-mongoose.set('strictQuery',true);
-mongoose.connect("mongodb+srv://Desonancen:"+ process.env.MONGO_ATLAS_PW +"@cluster0.zsqfhdp.mongodb.net/node-angular?retryWrites=true&w=majority")
-    .then(() => {
-        console.log('Connected to db');
-    })
-    .catch(()=> {
-        console.log('Connection blocked');
-    })
+app.use(bodyParser.json());
+app.use(cookieParser());
+app.use(cors());
 
 app.use(bodyParser.json());
 app.use('/images', express.static(path.join('images')));
@@ -29,5 +26,7 @@ app.use((req, res, next) => {
 
 app.use('/api/posts', postsRoutes);
 app.use('/api/user', userRoutes);
+
+app.use(errorMiddleware);
 
 module.exports = app;

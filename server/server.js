@@ -1,50 +1,9 @@
 const app = require("./app");
-const debug = require("debug")("node-angular");
 const http = require("http");
 const { Server } = require('socket.io');
+const mongoose = require('mongoose');
 
-const normalizePort = val => {
-  let port = parseInt(val, 10);
-
-  if (isNaN(port)) {
-    // named pipe
-    return val;
-  }
-
-  if (port >= 0) {
-    // port number
-    return port;
-  }
-
-  return false;
-};
-
-const onError = error => {
-  if (error.syscall !== "listen") {
-    throw error;
-  }
-  const bind = typeof port === "string" ? "pipe " + port : "port " + port;
-  switch (error.code) {
-    case "EACCES":
-      console.error(bind + " requires elevated privileges");
-      process.exit(1);
-      break;
-    case "EADDRINUSE":
-      console.error(bind + " is already in use");
-      process.exit(1);
-      break;
-    default:
-      throw error;
-  }
-};
-
-const onListening = () => {
-  server.address();
-  const bind = typeof port === "string" ? "pipe " + port : "port " + port;
-  debug("Listening on " + bind);
-};
-
-const port = normalizePort(process.env.PORT || "3000");
+const port = process.env.PORT || "3000";
 app.set("port", port);
 
 const server = http.createServer(app);
@@ -53,9 +12,27 @@ const socketIOServer = new Server(server, {
     origin: "http://localhost:4200"  // TODO should be removed - added for local testing
   }
 });
-server.on("error", onError);
-server.on("listening", onListening);
-server.listen(port);
+
+const start = async () => {
+  try {
+    server.listen(port, () => console.log(`Server started on PORT = ${ port }`));
+    await mongoose.set('strictQuery', true);
+    await mongoose.connect("mongodb+srv://Desonancen:" + process.env.MONGO_ATLAS_PW + "@cluster0.zsqfhdp.mongodb.net/node-angular?retryWrites=true&w=majority", {
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    })
+        .then(() => {
+          console.log('Connected to db');
+        })
+        .catch((e) => {
+          console.log(e, 'Connection blocked');
+        })
+  }
+  catch (e) {
+    console.log(e)
+  }
+}
+start();
 
 socketIOServer.sockets.on('connection', (socket) => {
   console.log('Socket connected');

@@ -4,67 +4,32 @@ const {validationResult} = require('express-validator');
 
 const User = require('../models/user.model');
 const Role = require('../models/role.model');
+const userService = require("../services/user.service");
+const ApiError = require("../exceptions/api-error");
 
-const generateAccessToken = (id, roles) => {
-    const payload = {
-        id, roles
+exports.createUser = async (req, res, next) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return next(ApiError.BadRequest('Error during registration', errors.array()))
+        }
+        const { username, password, email } = req.body;
+        const userData = await userService.signup(email, password, username);
+        res.cookie('refreshToken', userData.refreshToken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true })
+        return res.json(userData);
+    } catch (e) {
+        next(e);
     }
-    return jwt.sign(payload, process.env.JWT_KEY, {expiresIn: "24h"});
 }
 
-exports.createUser = async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({message: 'Error during registration', errors})
-    }
-    const {username, password} = req.body;
-    const candidate = await User.findOne({username});
-    if (candidate) {
-        return res.status(400).json({message: "User with this username already exist"})
-    }
-    const userRole = await Role.findOne({value: "USER"});
-
-    bcrypt.hash(password, 10).then(hash => {
-        const user = new User({
-            username,
-            email: req.body.email,
-            password: hash,
-            roles: [userRole.value]
-        });
-        user.save()
-            .then(result => {
-                res.status(201).json({message: 'User successfully registered', result})
-            })
-            .catch(error => {
-                console.log(error)
-                res.status(500).json({
-                    message: 'Invalid authentication credentials!'
-                })
-            })
-    });
-}
-
-exports.loginUser = async (req, res) => {
-    // let fetchedUser;
+exports.loginUser = async (req, res, next) => {
     try {
         const {username, password} = req.body;
-        const user = await User.findOne({username})
-        if (!user) {
-            return res.status(401).json({
-                message: 'Auth failed'
-            });
-        }
-        const validPassword = bcrypt.compareSync(password, user.password);
-        if (!validPassword) {
-            return res.status(401).json({
-                message: 'Auth failed'
-            });
-        }
-        const token = generateAccessToken(user._id, user.roles);
-        return res.json(token);
+        const userData = await userService.login(username, password);
+        res.cookie('refreshToken', userData.refreshToken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true })
+        return res.json(userData);
     } catch (e) {
-        console.log(e)
-        res.status(400).json({message: 'Invalid authentication credentials!'})
+        next(e);
     }
     // await User.findOne({email: req.body.email}).then(user => {
     //     if (!user) {
@@ -98,12 +63,45 @@ exports.loginUser = async (req, res) => {
     //     })
 }
 
-exports.getUsers = async (req, res) => {
+exports.logout = async (req, res,next) => {
     try {
-        const users = await User.find();
-        res.json(users);
+        const {refreshToken} = req.cookies;
+        const token = await userService.logout(refreshToken);
+        res.clearCookie('refreshToken');
+        return res.json(token);
+    } catch (e) {
+        next(e);
+    }
+}
+
+exports.activate = async (req, res, next) => {
+    try {
+        const activationLink = req.params.link;
+        await userService.activate(activationLink);
+        return res.redirect(process.env.CLIENT_URL);
+    } catch (e) {
+        next(e);
+    }
+}
+
+exports.refresh = async (req, res, next) => {
+    try {
+        const {refreshToken} = req.cookies;
+        const userData = await userService.refresh(refreshToken);
+        res.cookie('refreshToken', userData.refreshToken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true })
+        return res.json(userData);
+    } catch (e) {
+        next(e);
+    }
+}
+
+exports.getUsers = async (req, res, next) => {
+    try {
+        const users = await userService.getAllUsers();
+        return res.json(users);
     } catch (e) {
         console.log(e)
         res.status(400).json({message: 'Get user error'})
+        next(e);
     }
 }

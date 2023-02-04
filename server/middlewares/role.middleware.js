@@ -1,14 +1,14 @@
 const jwt = require('jsonwebtoken');
+const ApiError = require("../exceptions/api-error");
+
 module.exports = (roles) => {
     return (req, res, next) => {
         try {
-            const token = req.headers.authorization.split(' ')[1]; // How we get a token from headers, omit Bearer and get only token
-            if (!token) {
-                res.status(401).json({
-                    message: 'You are not authenticated!'
-                });
+            const accessToken = req.headers.authorization?.split(' ')[1];
+            if (!accessToken) {
+                return next(ApiError.UnauthorizedError());
             }
-            const {roles: userRoles} = jwt.verify(token, process.env.JWT_KEY);
+            const { roles: userRoles } = jwt.verify(accessToken, process.env.JWT_ACCESS_KEY);
             let hasRole = false;
             userRoles.forEach(role => {
                 if (roles.includes(role)) {
@@ -22,10 +22,7 @@ module.exports = (roles) => {
             }
             next();
         } catch (error) {
-            console.log(error)
-            res.status(401).json({
-                message: 'You are not authenticated!'
-            });
+            return next(ApiError.UnauthorizedError());
         }
     }
 }

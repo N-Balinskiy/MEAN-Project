@@ -1,6 +1,17 @@
 {
   "env": {
     "MONGO_ATLAS_PW": "PALuK9I2HNWQFbWn",
-    "JWT_KEY": "secret_this_should_be_longer"
+    "JWT_ACCESS_KEY": "jwt-secret-key",
+    "JWT_REFRESH_KEY": "jwt-refresh-secret-key",
+    "SMTP_HOST": "smtp.gmail.com",
+    "SMTP_PORT": "465",
+    "SMTP_USER": "desonanceTest@gmail.com",
+    "SMTP_PASSWORD": "desonanceTest1*",
+    "GMAIL_CLIENT_ID": "525363577546-tl32d7gnesfnfqbsic9mjloq52d2eqoa.apps.googleusercontent.com",
+    "GMAIL_CLIENT_SECRET":"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",
+    "GMAIL_REDIRECT_URI":"https://developers.google.com/oauthplayground",
+    "GMAIL_REFRESH_TOKEN":"1//04IdCynEhy-dYCgYIARAAGAQSNwF-L9IrmYfnLqmqtgeiJ7dN8bmTXUiXmlP3T7bQP_BVJN1fe0DEXe10XFPERPzSDCse6Dt6vOM",
+    "API_URL": "http://localhost:3000",
+    "CLIENT_URL": "https://google.com"
   }
 }

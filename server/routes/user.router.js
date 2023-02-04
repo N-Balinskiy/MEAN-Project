@@ -8,12 +8,15 @@ const router = express.Router();
 
 router.post('/signup', [
     check('username', "Username cannot be empty").trim().notEmpty(),
-    check('password', 'Password should contain more then 4 and less then 10 symbols').trim().isLength({min:4, max: 10}),
+    check('password', 'Password should contain more then 4 and less then 10 symbols').trim().isLength({min:4, max: 22}),
     check('email', 'E-mail should be in valid format').trim().isEmail()
 ], UserController.createUser);
 
 router.post('/login', UserController.loginUser);
+router.post('/logout', UserController.logout);
+router.get('/activate/:link', UserController.activate);
+router.get('/refresh', UserController.refresh);
 
-router.get('/users', roleMiddleware(['ADMIN']), UserController.getUsers);
+router.get('/users', checkAuth, roleMiddleware(['ADMIN']), UserController.getUsers);
 
 module.exports = router;

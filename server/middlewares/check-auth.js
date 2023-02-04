@@ -1,20 +1,22 @@
 const jwt = require("jsonwebtoken");
+const ApiError = require('../exceptions/api-error');
+const tokenService = require("../services/token.service");
 
 module.exports = (req, res, next) => {
     try {
-        const token = req.headers.authorization.split(' ')[1]; // How we get a token from headers, omit Bearer and get only token
-        if (!token) {
-            res.status(401).json({
-                message: 'You are not authenticated!'
-            });
+        const accessToken = req.headers.authorization.split(' ')[1];
+        if (!accessToken) {
+            return next(ApiError.UnauthorizedError());
         }
-        const decodedToken = jwt.verify(token, process.env.JWT_KEY);
-        req.userData = { roles: decodedToken.roles, userId: decodedToken.userId } ;
+        const userData = tokenService.validateAccessToken(accessToken);
+        if (!userData) {
+            return next(ApiError.UnauthorizedError());
+        }
+
+        const decodedToken = jwt.verify(accessToken, process.env.JWT_ACCESS_KEY);
+        req.userData = { roles: decodedToken.roles, userId: decodedToken.userId };
         next();
     } catch (error) {
-        console.log(error)
-        res.status(401).json({
-            message: 'You are not authenticated!'
-        });
+        return next(ApiError.UnauthorizedError());
     }
 }
