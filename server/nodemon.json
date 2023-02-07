@@ -12,6 +12,6 @@
     "GMAIL_REDIRECT_URI":"https://developers.google.com/oauthplayground",
     "GMAIL_REFRESH_TOKEN":"1//04IdCynEhy-dYCgYIARAAGAQSNwF-L9IrmYfnLqmqtgeiJ7dN8bmTXUiXmlP3T7bQP_BVJN1fe0DEXe10XFPERPzSDCse6Dt6vOM",
     "API_URL": "http://localhost:3000",
-    "CLIENT_URL": "https://google.com"
+    "CLIENT_URL": "http://localhost:4200"
   }
 }

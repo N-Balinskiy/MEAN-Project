@@ -34,7 +34,7 @@ exports.signup = async (email, password, username) => {
 
     await tokenService.saveToken(userDto.id, tokens.refreshToken);
 
-    return { ...tokens, user: userDto }
+    return { ...tokens, user: userDto, expiresIn: 3600 }
 }
 
 exports.activate = async (activationLink) => {

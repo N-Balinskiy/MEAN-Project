@@ -12,6 +12,8 @@ import { PostsSocketService } from './posts-socket.service';
 export class PostsService {
   private posts: Post[] = [];
   private postsUpdated = new Subject<{ posts: Post[]; postsCount: number }>();
+  private currentPostPage: number = 1;
+  private postsPerPage: number = 1;
 
   private readonly BACKEND_URL = environment.apiUrl + '/posts/';
 
@@ -26,6 +28,8 @@ export class PostsService {
 
   getPosts(postsPerPage: number, currentPage: number): void {
     const queryParams = `?pageSize=${postsPerPage}&page=${currentPage}`;
+    this.currentPostPage = currentPage;
+    this.postsPerPage = postsPerPage;
     this.http
       .get<{ message: string; posts: any; postsCount: number }>(this.BACKEND_URL + queryParams)
       .pipe(
@@ -110,14 +114,13 @@ export class PostsService {
 
     this.postsSocketService.receiveDeletePostSocket().subscribe((post: any) => {
       console.log(`Delete ${post.id} Post socket received`);
-      this.refreshPosts(post);
+      this.refreshPosts(post, true);
     });
   }
 
-  private refreshPosts(post: any) {
-    if (post.creator != this.authService.getUserId()) {
-      // TODO for now it refresh posts only for other users so when we delete post for us posts not updates
-      this.getPosts(10, 1); //TODO add dynamic info
+  private refreshPosts(post: any, updateForAll: boolean = false) {
+    if (updateForAll || post.creator != this.authService.getUserId()) {
+      this.getPosts(this.postsPerPage, this.currentPostPage);
     }
   }
 }
