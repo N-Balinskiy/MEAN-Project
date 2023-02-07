@@ -15,11 +15,12 @@ import { SignupComponent } from './signup/signup.component';
   imports: [
     CommonModule,
     MatInputModule,
-    MatCardModule,
+
     MatProgressSpinnerModule,
     ReactiveFormsModule,
     MatButtonModule,
     AuthRoutingModule,
+    MatCardModule,
   ],
 })
 export class AuthModule {}

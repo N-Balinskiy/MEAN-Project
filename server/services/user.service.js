@@ -8,9 +8,10 @@ const UserDto = require("../dtos/user.dto");
 const ApiError = require("../exceptions/api-error");
 
 exports.signup = async (email, password, username) => {
-    const candidate = await User.findOne({ email });
-    if (candidate) {
-        throw ApiError.BadRequest("User with this username already exist");
+    const checkUserName = await User.findOne({ username });
+    const checkUserMail = await User.findOne({ email });
+    if (checkUserName || checkUserMail) {
+        throw ApiError.BadRequest(`User with this ${checkUserName ? 'username' : 'email'} already exist`);
     }
     const userRole = await Role.findOne({ value: "USER" });
 
@@ -36,8 +37,8 @@ exports.signup = async (email, password, username) => {
     return { ...tokens, user: userDto }
 }
 
-exports.activate = async (activationLint) => {
-    const user = await User.findOne({activationLint});
+exports.activate = async (activationLink) => {
+    const user = await User.findOne({activationLink});
     if(!user) {
         ApiError.BadRequest('Incorrect activation link');
     }
@@ -55,12 +56,15 @@ exports.login = async (username, password) => {
     if (!isPassEquals) {
         throw ApiError.BadRequest('Invalid authentication credentials!');
     }
+    if (!user.isActivated) {
+        throw ApiError.BadRequest('Account not activated '); // TODO change to another error BadRequest is incorrect
+    }
     const userDto = new UserDto(user);
     const tokens = tokenService.generateTokens({...userDto});
 
     await tokenService.saveToken(userDto.id, tokens.refreshToken);
 
-    return { ...tokens, user: userDto }
+    return { ...tokens, user: userDto, expiresIn: 3600 }
 }
 
 exports.logout = async (refreshToken) => {
@@ -89,6 +93,6 @@ exports.refresh = async (refreshToken) => {
 }
 
 exports.getAllUsers = async () => {
-    const users = await User.find({roles: "USER"}); // TODO work with this logic in future
+    const users = await User.find();
     return users;
 }

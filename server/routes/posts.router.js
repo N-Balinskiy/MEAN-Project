@@ -7,15 +7,10 @@ const extractFile = require('../middlewares/file');
 
 const router = express.Router();
 
-
 router.post('', checkAuth, extractFile, PostsController.createPost);
-
 router.put('/:id', checkAuth, extractFile, PostsController.updatePost);
-
 router.get('', PostsController.getPosts);
-
 router.get('/:id', PostsController.getPost);
-
-router.delete('/:id', checkAuth, PostsController.deletePost); //TODO add deleting from disk storage by multer
+router.delete('/:id/:filename', checkAuth, PostsController.deletePost); //TODO add deleting from disk storage by multer
 
 module.exports = router;

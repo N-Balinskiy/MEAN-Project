@@ -6,6 +6,10 @@
       <mat-error *ngIf="form?.get('email')?.invalid">Please enter a valid email.</mat-error>
     </mat-form-field>
     <mat-form-field>
+      <input matInput placeholder="Username" formControlName="username" />
+      <mat-error *ngIf="form?.get('username')?.invalid">Please enter a valid password.</mat-error>
+    </mat-form-field>
+    <mat-form-field>
       <input matInput type="password" placeholder="Password" formControlName="password" />
       <mat-error *ngIf="form?.get('password')?.invalid">Please enter a valid password.</mat-error>
     </mat-form-field>

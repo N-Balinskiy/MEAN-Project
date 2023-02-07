@@ -14,7 +14,7 @@ module.exports = (req, res, next) => {
         }
 
         const decodedToken = jwt.verify(accessToken, process.env.JWT_ACCESS_KEY);
-        req.userData = { roles: decodedToken.roles, userId: decodedToken.userId };
+        req.userData = { roles: decodedToken.roles, userId: decodedToken.id };
         next();
     } catch (error) {
         return next(ApiError.UnauthorizedError());

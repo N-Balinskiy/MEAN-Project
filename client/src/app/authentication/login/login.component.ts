@@ -12,7 +12,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   isLoading = false;
   form: Nullable<FormGroup> = null;
 
-  private authStatusSub!: Subscription;
+  private authStatusSub: Subscription = new Subscription();
 
   constructor(private authService: AuthService) {}
 
@@ -33,12 +33,12 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
 
     this.isLoading = true;
-    this.authService.login(this.form?.value.email, this.form?.value.password);
+    this.authService.login(this.form?.value.username, this.form?.value.password);
   }
 
   private initFormGroup(): void {
     this.form = new FormGroup({
-      email: new FormControl(null, { validators: [Validators.required, Validators.email] }),
+      username: new FormControl(null, { validators: [Validators.required] }),
       password: new FormControl(null, { validators: [Validators.required] }),
     });
   }

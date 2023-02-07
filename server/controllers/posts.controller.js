@@ -1,4 +1,5 @@
 const Post = require('../models/post.model');
+const fs = require('fs')
 
 exports.createPost = (req, res) => {
     const url = req.protocol + '://' + req.get("host");
@@ -98,15 +99,23 @@ exports.getPost = (req, res) => {
 }
 
 exports.deletePost = (req, res) => {
+    const filePath = `./images/${req.params.filename}`;
+
     Post.deleteOne({_id: req.params.id, creator: req.userData.userId}).then(result => {
         if (result.deletedCount > 0) {
-            res.status(200).json({message: 'Post deleted'});
+            fs.unlink(filePath, (err) => {
+                if (err) {
+                    res.status(500).json({
+                        error: 'Failed to delete the image'
+                    });
+                }
+            });
+            res.status(200).json({message: 'Post deleted'})
         } else {
             res.status(401).json({
                 message: 'Not authorized!',
             });
         }
-
     })
         .catch(error => {
             res.status(500).json({

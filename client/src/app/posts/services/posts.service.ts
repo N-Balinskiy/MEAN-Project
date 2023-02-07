@@ -65,7 +65,7 @@ export class PostsService {
     const postData = new FormData();
     postData.append('title', title);
     postData.append('content', content);
-    postData.append('image', image, title);
+    postData.append('image', image);
     this.http.post<{ message: string; post: Post }>(this.BACKEND_URL, postData).subscribe(() => {
       this.router.navigate(['/']);
       this.postsSocketService.emitCreatePostSocket(postData);
@@ -79,7 +79,7 @@ export class PostsService {
       postData.append('id', id);
       postData.append('title', title);
       postData.append('content', content);
-      postData.append('image', image, title);
+      postData.append('image', image);
     } else {
       postData = { id, title, content, imagePath: image, creator: '' };
     }
@@ -92,7 +92,9 @@ export class PostsService {
 
   deletePost(postId: string): void {
     let postData: Post | null = this.posts.find(post => post.id == postId) ?? null;
-    this.http.delete(this.BACKEND_URL + postId).subscribe(() => this.postsSocketService.emitDeletePostSocket(postData));
+    this.http
+      .delete(this.BACKEND_URL + postId + `${postData?.imagePath.replace('http://localhost:3000/images', '')}`)
+      .subscribe(() => this.postsSocketService.emitDeletePostSocket(postData));
   }
 
   private observePostSocket() {
