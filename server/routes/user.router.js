@@ -18,5 +18,7 @@ router.get('/activate/:link', UserController.activate);
 router.get('/refresh', UserController.refresh);
 
 router.get('/users', checkAuth, roleMiddleware(['ADMIN']), UserController.getUsers);
+router.delete('/delete', checkAuth, roleMiddleware(['ADMIN']), UserController.deleteUser);
+router.put('/ban', checkAuth, roleMiddleware(['ADMIN']), UserController.banUser);
 
 module.exports = router;

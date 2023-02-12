@@ -7,7 +7,8 @@ const userSchema = mongoose.Schema({
     username: { type: String, required: true, unique: true },
     isActivated: { type: Boolean, default: false },
     activationLink: { type: String },
-    roles: [{ type: String, ref: 'Role' }]
+    roles: [{ type: String, ref: 'Role' }],
+    isBanned: { type: Boolean, default: false }
 });
 
 userSchema.plugin(uniqueValidator);

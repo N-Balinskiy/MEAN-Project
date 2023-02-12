@@ -4,6 +4,7 @@ const PostsController = require("../controllers/posts.controller");
 
 const checkAuth = require('../middlewares/check-auth');
 const extractFile = require('../middlewares/file');
+const roleMiddleware = require('../middlewares/role.middleware');
 
 const router = express.Router();
 
@@ -11,6 +12,7 @@ router.post('', checkAuth, extractFile, PostsController.createPost);
 router.put('/:id', checkAuth, extractFile, PostsController.updatePost);
 router.get('', PostsController.getPosts);
 router.get('/:id', PostsController.getPost);
-router.delete('/:id/:filename', checkAuth, PostsController.deletePost); //TODO add deleting from disk storage by multer
+router.delete('/:id/:filename', checkAuth, PostsController.deletePost);
+router.put('', checkAuth, roleMiddleware(['ADMIN']), PostsController.pinPost);
 
 module.exports = router;

@@ -63,8 +63,26 @@ exports.refresh = async (req, res, next) => {
 
 exports.getUsers = async (req, res, next) => {
     try {
-        const users = await userService.getAllUsers();
+        const users = await userService.getAllUsers(req.userData.userId);
         return res.json(users);
+    } catch (e) {
+        next(e);
+    }
+}
+
+exports.deleteUser = async (req, res, next) => {
+    try {
+        await userService.deleteUser(req.params.id);
+        res.status(200).json({message: 'User deleted'});
+    } catch (e) {
+        next(e);
+    }
+}
+
+exports.banUser = async (req, res, next) => {
+    try {
+        await userService.banUser(req.body.id);
+        res.status(200).json({message: 'User banned'});
     } catch (e) {
         next(e);
     }

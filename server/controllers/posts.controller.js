@@ -1,5 +1,5 @@
 const Post = require('../models/post.model');
-const fs = require('fs')
+const fs = require('fs');
 
 exports.createPost = (req, res) => {
     const url = req.protocol + '://' + req.get("host");
@@ -17,7 +17,8 @@ exports.createPost = (req, res) => {
                 id: createdPost._id
             }
         })
-    }).catch(error => {
+    }).catch(e => {
+        console.log(e)
         res.status(500).json({
             message: 'Creating a post failed!'
         })
@@ -49,7 +50,8 @@ exports.updatePost = (req, res) => {
             });
         }
     })
-        .catch(error => {
+        .catch(e => {
+            console.log(e);
             res.status(500).json({
                 message: "Couldn't update post"
             });
@@ -59,7 +61,7 @@ exports.updatePost = (req, res) => {
 exports.getPosts = (req, res) => {
     const pageSize = +req.query.pageSize;
     const currentPage = +req.query.page;
-    const postQuery = Post.find();
+    const postQuery = Post.find().sort({ isPinned: 1 }).populate('comments');
     let fetchedPosts;
     if (pageSize && currentPage) {
         postQuery.skip(pageSize * (currentPage - 1)).limit(pageSize);
@@ -76,7 +78,8 @@ exports.getPosts = (req, res) => {
                 postsCount: count
             });
         })
-        .catch(error => {
+        .catch(e => {
+            console.log(e);
             res.status(500).json({
                 message: 'Fetching posts failed!'
             })
@@ -84,14 +87,15 @@ exports.getPosts = (req, res) => {
 }
 
 exports.getPost = (req, res) => {
-    Post.findById(req.params.id).then(post => {
+    Post.findById(req.params.id).populate('comments').then(post => {
         if (post) {
             res.status(200).json(post);
         } else {
             res.status(404).json({message: 'Post not found!'})
         }
     })
-        .catch(error => {
+        .catch(e => {
+            console.log(e);
             res.status(500).json({
                 message: 'Fetching post failed!'
             })
@@ -100,8 +104,14 @@ exports.getPost = (req, res) => {
 
 exports.deletePost = (req, res) => {
     const filePath = `./images/${req.params.filename}`;
+    let creator;
+    if (req.body.creator !== req.userData.userId && !req.userData.roles.includes('ADMIN')) {
+        creator = '';
+    } else {
+        creator = req.userData.userId
+    }
 
-    Post.deleteOne({_id: req.params.id, creator: req.userData.userId}).then(result => {
+    Post.deleteOne({_id: req.params.id, creator }).then(result => {
         if (result.deletedCount > 0) {
             fs.unlink(filePath, (err) => {
                 if (err) {
@@ -117,9 +127,33 @@ exports.deletePost = (req, res) => {
             });
         }
     })
-        .catch(error => {
+        .catch(e => {
+            console.log(e);
             res.status(500).json({
                 message: 'Deleting post failed!'
             })
         });
+}
+
+exports.pinPost = async (req, res) => {
+    try {
+        const post = await Post.findById({_id: req.body.id});
+        if (!post) {
+            res.status(500).json({
+                message: 'Invalid post'
+            });
+        }
+        post.isPinned = true;
+
+        await post.save();
+
+        res.status(201).json({
+            message: 'Post pinned successfully',
+        })
+    } catch (e) {
+        console.log(e)
+        res.status(500).json({
+            message: 'Post pinning failed!'
+        })
+    }
 }

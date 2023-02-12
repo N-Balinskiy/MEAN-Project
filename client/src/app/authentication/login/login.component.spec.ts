@@ -35,18 +35,18 @@ describe('LoginComponent', () => {
   });
 
   it('should call the login method with correct arguments when form is valid and submit button is clicked', () => {
-    const emailInput = fixture.debugElement.query(By.css('input[formControlName="email"]'));
+    const usernameInput = fixture.debugElement.query(By.css('input[formControlName="username"]'));
     const passwordInput = fixture.debugElement.query(By.css('input[formControlName="password"]'));
     const submitButton = fixture.debugElement.query(By.css('button[type="submit"]'));
 
-    emailInput.nativeElement.value = 'test@test.com';
-    emailInput.nativeElement.dispatchEvent(new Event('input'));
+    usernameInput.nativeElement.value = 'username';
+    usernameInput.nativeElement.dispatchEvent(new Event('input'));
     passwordInput.nativeElement.value = 'password';
     passwordInput.nativeElement.dispatchEvent(new Event('input'));
 
     submitButton.nativeElement.click();
 
-    expect(authService.login).toHaveBeenCalledWith('test@test.com', 'password');
+    expect(authService.login).toHaveBeenCalledWith('username', 'password');
   });
 
   it('should not call the login method when form is invalid and submit button is clicked', () => {

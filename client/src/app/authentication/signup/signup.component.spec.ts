@@ -38,14 +38,16 @@ describe('SignupComponent', () => {
     fixture.detectChanges();
     component.form?.controls['email'].setValue('email@example.com');
     component.form?.controls['password'].setValue('password');
+    component.form?.controls['username'].setValue('username');
     component.onSignup();
-    expect(authService.createUser).toHaveBeenCalledWith('email@example.com', 'password');
+    expect(authService.createUser).toHaveBeenCalledWith('email@example.com', 'password', 'username');
   });
 
   it('should not call the createUser method on signup if the form is invalid', () => {
     fixture.detectChanges();
     component.form?.controls['email'].setValue('');
     component.form?.controls['password'].setValue('password');
+    component.form?.controls['password'].setValue('username');
     component.onSignup();
     expect(authService.createUser).not.toHaveBeenCalled();
   });

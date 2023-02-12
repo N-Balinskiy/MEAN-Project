@@ -7,6 +7,7 @@ const errorMiddleware = require("./middlewares/error.middleware");
 
 const postsRoutes = require("./routes/posts.router");
 const userRoutes = require("./routes/user.router");
+const commentRoutes = require("./routes/comment.router");
 
 const app = express();
 
@@ -14,7 +15,6 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(cors());
 
-app.use(bodyParser.json());
 app.use('/images', express.static(path.join('images')));
 
 app.use((req, res, next) => {
@@ -26,6 +26,7 @@ app.use((req, res, next) => {
 
 app.use('/api/posts', postsRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/comment', commentRoutes);
 
 app.use(errorMiddleware);
 

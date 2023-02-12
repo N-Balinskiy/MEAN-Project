@@ -30,9 +30,10 @@ describe('AuthService', () => {
     it('should call the correct API endpoint with the correct data', () => {
       const email = 'test@test.com';
       const password = 'password';
-      const authData = { email, password };
+      const username = 'username';
+      const authData = { email, password, username };
 
-      service.createUser(email, password);
+      service.createUser(email, password, username);
 
       const req = httpMock.expectOne(`${service['BACKEND_URL']}signup`);
       expect(req.request.method).toEqual('POST');
@@ -43,33 +44,33 @@ describe('AuthService', () => {
 
   describe('login', () => {
     it('should call the correct API endpoint with the correct data', () => {
-      const email = 'test@test.com';
+      const username = 'username';
       const password = 'password';
-      const authData = { email, password };
+      const authData = { username, password };
 
-      service.login(email, password);
+      service.login(username, password);
 
       const req = httpMock.expectOne(`${service['BACKEND_URL']}login`);
       expect(req.request.method).toEqual('POST');
       expect(req.request.body).toEqual(authData);
       req.flush({
-        token: 'mock_token',
+        accessToken: 'mock_token',
         expiresIn: 3600,
-        userId: 'mock_user_id',
+        user: { id: 'mock_user_id' },
       });
     });
 
     it('should set the correct properties on successful login', () => {
-      const email = 'test@test.com';
+      const username = 'username';
       const password = 'password';
 
-      service.login(email, password);
+      service.login(username, password);
 
       const req = httpMock.expectOne(`${service['BACKEND_URL']}login`);
       req.flush({
-        token: 'mock_token',
+        accessToken: 'mock_token',
         expiresIn: 3600,
-        userId: 'mock_user_id',
+        user: { id: 'mock_user_id' },
       });
 
       expect(service.getToken()).toEqual('mock_token');

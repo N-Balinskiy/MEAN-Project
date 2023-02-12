@@ -16,10 +16,11 @@ mat-paginator {
 }
 
 .post-image {
+  height: auto;
   width: 100%;
 
   img {
-    width: 100%;
+    width: 100%; //can be max-width for exact image sizes, but here we use width 100% for create the same containers for all images
     box-shadow: 1px 1px 5px rgba(0,0,0, 0.5);
   }
 }

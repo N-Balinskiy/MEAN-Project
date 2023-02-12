@@ -57,7 +57,11 @@ exports.login = async (username, password) => {
         throw ApiError.BadRequest('Invalid authentication credentials!');
     }
     if (!user.isActivated) {
-        throw ApiError.BadRequest('Account not activated '); // TODO change to another error BadRequest is incorrect
+        throw ApiError.BadRequest('Account not activated'); // TODO change to another error BadRequest is incorrect
+    }
+
+    if (user.isBanned) {
+        throw ApiError.BadRequest('This user was banned'); // TODO change to another error BadRequest is incorrect
     }
     const userDto = new UserDto(user);
     const tokens = tokenService.generateTokens({...userDto});
@@ -92,7 +96,29 @@ exports.refresh = async (refreshToken) => {
     return { ...tokens, user: userDto }
 }
 
-exports.getAllUsers = async () => {
-    const users = await User.find();
+exports.getAllUsers = async (currentUserId) => {
+    const users = await User.find({ _id: { $ne: currentUserId } });
     return users;
+}
+
+exports.deleteUser = async (userId) => {
+    const result = await User.deleteOne({_id: userId});
+    if (result.deletedCount > 0) {
+        return res.status(200).json({message: 'User deleted'})
+    } else {
+        return res.status(401).json({
+            message: 'Not authorized!',
+        });
+    }
+}
+
+exports.banUser = async (userId) => {
+    const user = await User.findOne({_id: userId});
+    if(!user) {
+        ApiError.BadRequest("Can't find user");
+    }
+
+    user.isBanned = true;
+
+    await user.save();
 }
