@@ -51,4 +51,14 @@ socketIOServer.sockets.on('connection', (socket) => {
     socketIOServer.emit('deletePost', post);
     console.log('Delete Post socket emitted');
   });
+
+  socket.on('deleteComment', (comment) => {
+    socketIOServer.emit('deleteComment', comment);
+    console.log('Delete Comment socket emitted');
+  });
+
+  socket.on('addComment', (post) => {
+    socketIOServer.emit('addComment', post);
+    console.log('Add Comment socket emitted');
+  });
 });

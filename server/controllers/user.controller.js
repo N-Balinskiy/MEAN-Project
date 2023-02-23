@@ -72,8 +72,10 @@ exports.getUsers = async (req, res, next) => {
 
 exports.deleteUser = async (req, res, next) => {
     try {
-        await userService.deleteUser(req.params.id);
-        res.status(200).json({message: 'User deleted'});
+        const result = await userService.deleteUser(req.params.id);
+        if (result.deletedCount > 0) {
+            return res.status(200).json({message: 'User deleted'})
+        }
     } catch (e) {
         next(e);
     }

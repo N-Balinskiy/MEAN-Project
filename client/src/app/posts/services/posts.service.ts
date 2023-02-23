@@ -5,6 +5,7 @@ import { map, Observable, Subject } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../authentication/services/auth.service';
+import { Comment } from '../interfaces/comment.interface';
 import { Post } from '../interfaces/post.interface';
 import { PostsSocketService } from './posts-socket.service';
 
@@ -116,12 +117,22 @@ export class PostsService {
       .subscribe(() => this.postsSocketService.emitDeletePostSocket(postData));
   }
 
-  addComment(postId: string, comment: string): void {}
+  addComment(postId: string, comment: string): void {
+    let postData: Post | null = this.posts.find(post => post.id == postId) ?? null;
+    this.http.post(this.COMMENT_BACKEND_URL + postId, { text: comment }).subscribe(() => {
+      this.getPosts(this.postsPerPage, this.currentPostPage);
+      this.postsSocketService.emitDeletePostSocket(postData);
+    });
+  }
 
-  deleteComment(postId: string, commentId: string, commentAuthor: string): void {
-    const body = { commentId: commentId, author: commentAuthor };
-    this.http.delete(this.COMMENT_BACKEND_URL + postId, { body }).subscribe();
-    //() => this.postsSocketService.emitDeleteCommentSocket(body)
+  deleteComment(postId: string, comment: Comment): void {
+    const body = { commentId: comment._id, author: comment.author };
+    let commentData: Comment | null =
+      this.posts.find(post => post.id == postId)?.comments?.find(com => com._id == comment._id) ?? null;
+    this.http.delete(this.COMMENT_BACKEND_URL + postId, { body }).subscribe(() => {
+      this.postsSocketService.emitDeleteCommentSocket(commentData);
+      this.getPosts(this.postsPerPage, this.currentPostPage);
+    });
   }
 
   pinPost(postId: string, postPinnedStatus: boolean): Observable<any> {
@@ -143,10 +154,26 @@ export class PostsService {
       console.log(`Delete ${post.id} Post socket received`);
       this.refreshPosts(post, true);
     });
+
+    this.postsSocketService.receiveDeleteCommentSocket().subscribe((comment: any) => {
+      console.log(`Delete ${comment._id} Comment socket received`);
+      this.refreshComments(comment, true);
+    });
+
+    this.postsSocketService.receiveAddCommentSocket().subscribe((post: any) => {
+      console.log(`Add ${post.id} Comment socket received`);
+      this.refreshPosts(post, true);
+    });
   }
 
   private refreshPosts(post: any, updateForAll: boolean = false) {
     if (updateForAll || post.creator != this.authService.getUserId()) {
+      this.getPosts(this.postsPerPage, this.currentPostPage);
+    }
+  }
+
+  private refreshComments(comment: any, updateForAll: boolean = false) {
+    if (updateForAll || comment.author != this.authService.getUserId()) {
       this.getPosts(this.postsPerPage, this.currentPostPage);
     }
   }

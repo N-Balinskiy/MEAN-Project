@@ -1,5 +1,7 @@
 const User = require('../models/user.model');
 const Role = require('../models/role.model');
+const Post = require('../models/post.model');
+const Token = require("../models/token.model");
 const bcrypt = require('bcryptjs');
 const uuid = require("uuid");
 const mailService = require("./mail.service");
@@ -106,14 +108,20 @@ exports.getAllUsers = async (currentUserId) => {
 }
 
 exports.deleteUser = async (userId) => {
+    await Post.updateMany(
+        { creator: userId },
+        { $unset: { creator: 1 } } // Remove the creator field
+    );
+
+    await Token.deleteMany({ user: userId });
+
     const result = await User.deleteOne({_id: userId});
-    if (result.deletedCount > 0) {
-        return res.status(200).json({message: 'User deleted'})
-    } else {
-        return res.status(401).json({
-            message: 'Not authorized!',
-        });
+
+    if (result.deletedCount === 0) {
+        throw ApiError.UnauthorizedError();
     }
+
+    return result;
 }
 
 exports.banUser = async (userId) => {

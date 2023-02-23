@@ -4,6 +4,7 @@ import { PageEvent } from '@angular/material/paginator';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 
 import { AuthService } from '../../authentication/services/auth.service';
+import { Comment } from '../interfaces/comment.interface';
 import { Post } from '../interfaces/post.interface';
 import { PostsService } from '../services/posts.service';
 
@@ -56,11 +57,6 @@ export class PostListComponent implements OnInit {
     this.postsService.getPosts(this.postsPerPage, this.currentPage);
   }
 
-  onDeleteComment(postId: string, commentId: string, commentAuthor: string): void {
-    this.postsService.deleteComment(postId, commentId, commentAuthor);
-    this.postsService.getPosts(this.postsPerPage, this.currentPage);
-  }
-
   onChangedPage(pageData: PageEvent) {
     this.isLoading = true;
     this.currentPage = pageData.pageIndex + 1;
@@ -89,6 +85,10 @@ export class PostListComponent implements OnInit {
     }
     this.postsService.addComment(post.id, this.form?.value.comment);
     this.form?.reset();
+  }
+
+  onDeleteComment(postId: string, comment: Comment): void {
+    this.postsService.deleteComment(postId, comment);
   }
 
   private initFormGroup(): void {

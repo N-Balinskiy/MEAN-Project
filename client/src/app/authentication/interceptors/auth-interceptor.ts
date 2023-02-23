@@ -22,6 +22,10 @@ export class AuthInterceptor implements HttpInterceptor {
       catchError((error: HttpErrorResponse) => {
         if (error.status === 401) {
           return this.handle401Error(request, next);
+        } else if (error.status === 404 && error.error.message === 'User not found!') {
+          this.authService.logout();
+          this.dialog.open(ErrorComponent, { data: { message: 'Your account was deleted' } });
+          return throwError(() => error);
         } else {
           let errorMessage = error.error.message || 'An unknown error occurred!';
           this.dialog.open(ErrorComponent, { data: { message: errorMessage } });

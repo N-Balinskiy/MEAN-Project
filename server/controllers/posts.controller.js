@@ -1,5 +1,6 @@
 const Post = require('../models/post.model');
 const fs = require('fs');
+const User = require('../models/user.model');
 
 exports.createPost = (req, res) => {
     const url = req.protocol + '://' + req.get("host");
@@ -9,19 +10,26 @@ exports.createPost = (req, res) => {
         imagePath: url + "/images/" + req.file.filename,
         creator: req.userData.userId
     });
-    post.save().then(createdPost => {
-        res.status(201).json({
-            message: 'Post added successfully',
-            post: {
-                ...createdPost,
-                id: createdPost._id
-            }
-        })
-    }).catch(e => {
-        console.log(e)
-        res.status(500).json({
-            message: 'Creating a post failed!'
-        })
+
+    User.findOne({ _id: req.userData.userId }).then(user => {
+        if (user) {
+            post.save().then(createdPost => {
+                res.status(201).json({
+                    message: 'Post added successfully',
+                    post: {
+                        ...createdPost,
+                        id: createdPost._id
+                    }
+                })
+            }).catch(e => {
+                console.log(e)
+                res.status(500).json({
+                    message: 'Creating a post failed!'
+                })
+            });
+        } else {
+            res.status(404).json({message: 'User not found!'})
+        }
     });
 }
 

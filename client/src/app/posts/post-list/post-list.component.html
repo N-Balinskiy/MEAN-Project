@@ -1,6 +1,6 @@
 <mat-spinner *ngIf="isLoading"></mat-spinner>
 <mat-accordion [multi]="true" *ngIf="posts.length && !isLoading; else emptyPosts">
-  <mat-expansion-panel *ngFor="let post of posts">
+  <mat-expansion-panel [expanded]="true" *ngFor="let post of posts">
     <mat-expansion-panel-header>
       <div class="post-header">
         <p>{{ post.title }}</p>
@@ -13,9 +13,21 @@
       <img [src]="post.imagePath" [alt]="post.title" />
     </div>
     <p>{{ post.content }}</p>
-    <mat-action-row *ngIf="(userAuthenticated && userId === post.creator) || isAdmin">
-      <a mat-button color="primary" [routerLink]="['/edit', post.id]">EDIT</a>
-      <button mat-button color="warn" (click)="onDeletePost(post.id)">DELETE</button>
+    <mat-action-row>
+      <a
+        *ngIf="userAuthenticated && userId === post.creator"
+        mat-button
+        color="primary"
+        [routerLink]="['/edit', post.id]"
+        >EDIT</a
+      >
+      <button
+        *ngIf="(userAuthenticated && userId === post.creator) || isAdmin"
+        mat-button
+        color="warn"
+        (click)="onDeletePost(post.id)">
+        DELETE
+      </button>
     </mat-action-row>
     <mat-expansion-panel *ngIf="userAuthenticated" [expanded]="true" (opened)="onOpenPanel()" (closed)="onClosePanel()">
       <mat-expansion-panel-header>{{ commentsButton }}</mat-expansion-panel-header>
@@ -25,7 +37,7 @@
           mat-button
           color="warn"
           *ngIf="userId === comment.author || isAdmin"
-          (click)="onDeleteComment(post.id, comment._id, comment.author)">
+          (click)="onDeleteComment(post.id, comment)">
           Delete
         </button>
       </div>
