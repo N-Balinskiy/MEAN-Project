@@ -34,6 +34,10 @@ export class PostsSocketService {
     this.socket.emit('deletePost', post);
   }
 
+  // emitDeleteCommentSocket(comment: any) {
+  //   this.socket.emit('deleteComment', comment);
+  // }
+
   receiveDeletePostSocket() {
     return new Observable((observer: any) => {
       this.socket.on('deletePost', (post: any) => {

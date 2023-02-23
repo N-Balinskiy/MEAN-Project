@@ -9,7 +9,7 @@ app.set("port", port);
 const server = http.createServer(app);
 const socketIOServer = new Server(server, {
   cors: {
-    origin: "http://localhost:4200"  // TODO should be removed - added for local testing
+    origin: process.env.CLIENT_URL
   }
 });
 

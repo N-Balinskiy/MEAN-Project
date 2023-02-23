@@ -1,19 +1,21 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, ParamMap } from '@angular/router';
-import { Subscription, switchMap, tap } from 'rxjs';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { switchMap, tap } from 'rxjs';
 
 import { AuthService } from '../../authentication/services/auth.service';
 import { Post } from '../interfaces/post.interface';
 import { PostsService } from '../services/posts.service';
 import { mimeType } from '../validators/mime-type.validator';
 
+@UntilDestroy()
 @Component({
   selector: 'mean-post-create',
   templateUrl: 'post-create.component.html',
   styleUrls: ['post-create.component.scss'],
 })
-export class PostCreateComponent implements OnInit, OnDestroy {
+export class PostCreateComponent implements OnInit {
   post: Nullable<Post> = null;
   isLoading = false;
   form: Nullable<FormGroup> = null;
@@ -21,14 +23,16 @@ export class PostCreateComponent implements OnInit, OnDestroy {
 
   private mode = 'create';
   private postId: string | null = null;
-  private authStatusSub!: Subscription;
 
   constructor(private postsService: PostsService, private route: ActivatedRoute, private authService: AuthService) {}
 
   ngOnInit() {
-    this.authStatusSub = this.authService.getAuthStatusListener().subscribe(() => {
-      this.isLoading = false;
-    });
+    this.authService
+      .getAuthStatusListener()
+      .pipe(untilDestroyed(this))
+      .subscribe(() => {
+        this.isLoading = false;
+      });
     this.initFormGroup();
 
     this.isLoading = true;
@@ -54,6 +58,7 @@ export class PostCreateComponent implements OnInit, OnDestroy {
             content: postData.content,
             imagePath: postData.imagePath,
             creator: postData.creator,
+            isPinned: postData.isPinned,
           };
           this.form?.setValue({
             title: this.post?.title,
@@ -90,10 +95,6 @@ export class PostCreateComponent implements OnInit, OnDestroy {
       this.imagePreview = reader.result as string;
     };
     file && reader.readAsDataURL(file);
-  }
-
-  ngOnDestroy() {
-    this.authStatusSub.unsubscribe();
   }
 
   private initFormGroup(): void {

@@ -13,7 +13,6 @@ import { AuthInterceptor } from './authentication/interceptors/auth-interceptor'
 import { HeaderComponent } from './header/header.component';
 import { PostsModule } from './posts/posts.module';
 import { ErrorComponent } from './shared/components/error/error.component';
-import { ErrorInterceptor } from './shared/interceptors/error-interceptor';
 
 @NgModule({
   declarations: [AppComponent, HeaderComponent, ErrorComponent],
@@ -28,10 +27,7 @@ import { ErrorInterceptor } from './shared/interceptors/error-interceptor';
     MatButtonModule,
     MatToolbarModule,
   ],
-  providers: [
-    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
-    { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
-  ],
+  providers: [{ provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }],
   bootstrap: [AppComponent],
   entryComponents: [ErrorComponent],
 })

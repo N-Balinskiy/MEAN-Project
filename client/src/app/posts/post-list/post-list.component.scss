@@ -20,7 +20,28 @@ mat-paginator {
   width: 100%;
 
   img {
-    width: 100%; //can be max-width for exact image sizes, but here we use width 100% for create the same containers for all images
+    //width: 100%; //can be max-width for exact image sizes, but here we use width 100% for create the same containers for all images
+    max-width: 100%;
     box-shadow: 1px 1px 5px rgba(0,0,0, 0.5);
   }
+}
+
+mat-form-field {
+  width: 100%;
+}
+
+.comment-info {
+  display: flex;
+  justify-content: space-between;
+}
+
+.post-header {
+  display: flex;
+  justify-content: space-between;
+  width: 95%;
+
+   button {
+     min-width: 75px;
+     color: antiquewhite;
+   }
 }

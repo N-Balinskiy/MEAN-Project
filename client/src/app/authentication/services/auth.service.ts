@@ -1,69 +1,65 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Router } from '@angular/router';
-import { Observable, Subject } from 'rxjs';
+import { ActivatedRoute, Router } from '@angular/router';
+import { BehaviorSubject, Observable, tap } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { AuthData } from '../interfaces/auth-data.interface';
+import { AuthResponse } from '../interfaces/auth-response.interface';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private token: string | null = null;
-  private isAuthenticated = false;
-  private authStatusListener = new Subject<boolean>();
-  private tokenTimer!: NodeJS.Timer;
-  private userId: string | null = '';
+  private token: BehaviorSubject<string | null> = new BehaviorSubject<string | null>(null);
+  private authStatusListener = new BehaviorSubject<boolean>(false);
+  private userId: BehaviorSubject<string | null> = new BehaviorSubject<string | null>(null);
+  private userRoles: BehaviorSubject<string[]> = new BehaviorSubject<string[]>([]);
 
   private readonly BACKEND_URL = environment.apiUrl + '/user/';
 
-  constructor(private httpClient: HttpClient, private router: Router) {}
+  constructor(private httpClient: HttpClient, private router: Router, private activatedRoute: ActivatedRoute) {}
 
-  getToken(): string | null {
+  getToken(): BehaviorSubject<string | null> {
     return this.token;
-  }
-
-  getIsAuth(): boolean {
-    return this.isAuthenticated;
   }
 
   getUserId() {
     return this.userId;
   }
 
-  getAuthStatusListener(): Observable<boolean> {
-    return this.authStatusListener.asObservable();
+  getUserRoles() {
+    return this.userRoles;
+  }
+
+  getAuthStatusListener(): BehaviorSubject<boolean> {
+    return this.authStatusListener;
   }
 
   createUser(email: string, password: string, username: string): void {
     const authData: AuthData = { email, password, username };
-    this.httpClient
-      .post<{ accessToken: string; expiresIn: number; user: { id: string } }>(`${this.BACKEND_URL}signup`, authData)
-      .subscribe({
-        next: response => {
-          this.token = response.accessToken;
-          if (response.accessToken) {
-            this.setAuthorizationInfo(response);
-          }
-        },
-        error: () => this.authStatusListener.next(false),
-      });
+    this.httpClient.post<AuthResponse>(`${this.BACKEND_URL}signup`, authData, { withCredentials: true }).subscribe({
+      next: response => {
+        this.token.next(response.accessToken);
+        if (response.accessToken) {
+          this.setAuthorizationInfo(response);
+        }
+      },
+      error: () => this.authStatusListener.next(false),
+    });
   }
 
   login(username: string, password: string): void {
     const authData: Omit<AuthData, 'email'> = { password, username };
-    this.httpClient
-      .post<{ accessToken: string; expiresIn: number; user: { id: string } }>(`${this.BACKEND_URL}login`, authData)
-      .subscribe({
-        next: response => {
-          this.token = response.accessToken;
-          if (response.accessToken) {
-            this.setAuthorizationInfo(response);
-          }
-        },
-        error: () => {
-          this.authStatusListener.next(false);
-        },
-      });
+    this.httpClient.post<AuthResponse>(`${this.BACKEND_URL}login`, authData, { withCredentials: true }).subscribe({
+      next: response => {
+        this.token.next(response.accessToken);
+        if (response.accessToken) {
+          this.setAuthorizationInfo(response);
+        }
+      },
+      error: () => {
+        this.authStatusListener.next(false);
+      },
+    });
   }
 
   autoAuthUser(): void {
@@ -71,69 +67,70 @@ export class AuthService {
     if (!authInformation) {
       return;
     }
-    const now = new Date();
-    const expiresIn = authInformation!.expirationDate.getTime() - now.getTime();
-    if (expiresIn > 0 && authInformation?.token) {
-      this.token = authInformation.token;
-      this.isAuthenticated = true;
-      this.userId = authInformation.userId;
-      this.setAuthTimer(expiresIn / 1000);
+    if (authInformation?.token) {
+      this.token.next(authInformation.token);
+      this.userId.next(authInformation.userId);
+      this.userRoles.next(authInformation.userRoles);
       this.authStatusListener.next(true);
     }
   }
 
   logout(): void {
-    this.token = null;
-    this.isAuthenticated = false;
-    this.authStatusListener.next(false);
-    this.userId = null;
-    clearTimeout(this.tokenTimer);
-    this.clearAuthData();
-    this.router.navigate(['/']);
+    this.httpClient.get<void>(`${this.BACKEND_URL}logout`, { withCredentials: true }).subscribe(() => {
+      this.token.next(null);
+      this.authStatusListener.next(false);
+      this.userId.next(null);
+      this.userRoles.next([]);
+      this.clearAuthData();
+      this.router.navigate(['/']);
+    });
   }
 
-  private setAuthorizationInfo(response: { accessToken: string; expiresIn: number; user: { id: string } }): void {
-    const expiresInDuration = response.expiresIn;
-    this.setAuthTimer(expiresInDuration);
-    this.isAuthenticated = true;
-    this.userId = response.user.id;
+  refreshToken(): Observable<AuthResponse> {
+    return this.httpClient.get<AuthResponse>(`${this.BACKEND_URL}refresh`, { withCredentials: true }).pipe(
+      tap((response: AuthResponse) => {
+        if (response.accessToken) {
+          this.token.next(response.accessToken);
+          this.setAuthorizationInfo(response);
+        }
+      })
+    );
+  }
+
+  setAuthorizationInfo(response: AuthResponse): void {
+    this.userId.next(response.user.id);
+    this.userRoles.next(response.user.roles);
     this.authStatusListener.next(true);
-    const now = new Date();
-    const expirationDate = new Date(now.getTime() + expiresInDuration * 1000);
-    this.saveAuthData(response.accessToken, expirationDate, this.userId);
-    this.router.navigate(['/']);
+    this.saveAuthData(response.accessToken, this.userId?.getValue() ?? '', this.userRoles?.getValue() ?? []);
+    this.router.navigate(this.activatedRoute.snapshot.url.length ? [this.activatedRoute.snapshot.url] : ['/']);
   }
 
-  private setAuthTimer(duration: number) {
-    this.tokenTimer = setTimeout(() => {
-      this.logout();
-    }, duration * 1000);
-  }
-
-  private saveAuthData(token: string, expirationDate: Date, userId: string): void {
+  private saveAuthData(token: string, userId: string, userRoles: string[]): void {
     localStorage.setItem('accessToken', token);
-    localStorage.setItem('expiration', expirationDate.toISOString());
     localStorage.setItem('userId', userId);
+    localStorage.setItem('userRoles', JSON.stringify(userRoles));
   }
 
   private clearAuthData(): void {
     localStorage.removeItem('accessToken');
-    localStorage.removeItem('expiration');
     localStorage.removeItem('userId');
+    localStorage.removeItem('userRoles');
   }
 
   private getAuthData() {
     const token = localStorage.getItem('accessToken');
-    const expirationDate = localStorage.getItem('expiration');
     const userId = localStorage.getItem('userId');
-    if (!token || !expirationDate) {
+    const userRolesString = localStorage.getItem('userRoles');
+    const userRoles = userRolesString ? JSON.parse(userRolesString) : null;
+
+    if (!token) {
       return;
     }
 
     return {
       token,
-      expirationDate: new Date(expirationDate),
       userId,
+      userRoles,
     };
   }
 }

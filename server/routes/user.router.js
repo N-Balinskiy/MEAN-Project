@@ -13,7 +13,7 @@ router.post('/signup', [
 ], UserController.createUser);
 
 router.post('/login', UserController.loginUser);
-router.post('/logout', UserController.logout);
+router.get('/logout', UserController.logout);
 router.get('/activate/:link', UserController.activate);
 router.get('/refresh', UserController.refresh);
 

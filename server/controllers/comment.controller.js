@@ -33,6 +33,7 @@ exports.addComment = async (req, res) => {
 exports.deleteComment = async (req, res) => {
     try {
         let author;
+        console.log(req.body)
         if (req.body.author !== req.userData.userId && !req.userData.roles.includes('ADMIN')) {
             author = '';
         } else {

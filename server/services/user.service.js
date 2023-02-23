@@ -34,7 +34,7 @@ exports.signup = async (email, password, username) => {
 
     await tokenService.saveToken(userDto.id, tokens.refreshToken);
 
-    return { ...tokens, user: userDto, expiresIn: 3600 }
+    return { ...tokens, user: userDto}
 }
 
 exports.activate = async (activationLink) => {
@@ -68,7 +68,7 @@ exports.login = async (username, password) => {
 
     await tokenService.saveToken(userDto.id, tokens.refreshToken);
 
-    return { ...tokens, user: userDto, expiresIn: 3600 }
+    return { ...tokens, user: userDto}
 }
 
 exports.logout = async (refreshToken) => {
@@ -77,7 +77,7 @@ exports.logout = async (refreshToken) => {
 
 exports.refresh = async (refreshToken) => {
     if (!refreshToken) {
-        throw ApiError.UnauthorizedError();
+        throw ApiError.BadRequest();
     }
 
     const userData = tokenService.validateRefreshToken(refreshToken);
@@ -93,7 +93,7 @@ exports.refresh = async (refreshToken) => {
 
     await tokenService.saveToken(userDto.id, tokens.refreshToken);
 
-    return { ...tokens, user: userDto }
+    return { ...tokens, user: userDto}
 }
 
 exports.getAllUsers = async (currentUserId) => {

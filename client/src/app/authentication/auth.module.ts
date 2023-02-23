@@ -15,7 +15,6 @@ import { SignupComponent } from './signup/signup.component';
   imports: [
     CommonModule,
     MatInputModule,
-
     MatProgressSpinnerModule,
     ReactiveFormsModule,
     MatButtonModule,

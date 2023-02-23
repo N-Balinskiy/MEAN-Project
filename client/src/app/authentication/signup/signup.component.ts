@@ -1,30 +1,28 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormControl, FormGroup, Validators } from '@angular/forms';
-import { Subscription } from 'rxjs';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 
 import { AuthService } from '../services/auth.service';
 
+@UntilDestroy()
 @Component({
   templateUrl: 'signup.component.html',
   styleUrls: ['signup.component.scss'],
 })
-export class SignupComponent implements OnInit, OnDestroy {
+export class SignupComponent implements OnInit {
   isLoading = false;
   form: Nullable<FormGroup> = null;
-
-  private authStatusSub: Subscription = new Subscription();
 
   constructor(private authService: AuthService) {}
 
   ngOnInit(): void {
     this.initFormGroup();
-    this.authStatusSub = this.authService.getAuthStatusListener().subscribe(() => {
-      this.isLoading = false;
-    });
-  }
-
-  ngOnDestroy(): void {
-    this.authStatusSub.unsubscribe();
+    this.authService
+      .getAuthStatusListener()
+      .pipe(untilDestroyed(this))
+      .subscribe(() => {
+        this.isLoading = false;
+      });
   }
 
   onSignup(): void {

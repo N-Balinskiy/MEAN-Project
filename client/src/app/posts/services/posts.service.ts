@@ -16,6 +16,7 @@ export class PostsService {
   private postsPerPage: number = 1;
 
   private readonly BACKEND_URL = environment.apiUrl + '/posts/';
+  private readonly COMMENT_BACKEND_URL = environment.apiUrl + '/comment/';
 
   constructor(
     private http: HttpClient,
@@ -42,6 +43,8 @@ export class PostsService {
                 id: post._id,
                 imagePath: post.imagePath,
                 creator: post.creator,
+                isPinned: post.isPinned,
+                comments: post.comments,
               };
             }),
             postsCount: postData.postsCount,
@@ -58,11 +61,23 @@ export class PostsService {
     return this.postsUpdated.asObservable();
   }
 
-  getPost(id: string): Observable<{ _id: string; title: string; content: string; imagePath: string; creator: string }> {
+  getPost(id: string): Observable<{
+    _id: string;
+    title: string;
+    content: string;
+    imagePath: string;
+    creator: string;
+    isPinned: boolean;
+  }> {
     // TODO change this object to PostResponse interface
-    return this.http.get<{ _id: string; title: string; content: string; imagePath: string; creator: string }>(
-      this.BACKEND_URL + id
-    );
+    return this.http.get<{
+      _id: string;
+      title: string;
+      content: string;
+      imagePath: string;
+      creator: string;
+      isPinned: boolean;
+    }>(this.BACKEND_URL + id);
   }
 
   addPost(title: string, content: string, image: File): void {
@@ -85,7 +100,7 @@ export class PostsService {
       postData.append('content', content);
       postData.append('image', image);
     } else {
-      postData = { id, title, content, imagePath: image, creator: '' };
+      postData = { id, title, content, imagePath: image, creator: '', isPinned: false };
     }
 
     this.http.put(this.BACKEND_URL + id, postData).subscribe(() => {
@@ -99,6 +114,18 @@ export class PostsService {
     this.http
       .delete(this.BACKEND_URL + postId + `${postData?.imagePath.replace('http://localhost:3000/images', '')}`)
       .subscribe(() => this.postsSocketService.emitDeletePostSocket(postData));
+  }
+
+  addComment(postId: string, comment: string): void {}
+
+  deleteComment(postId: string, commentId: string, commentAuthor: string): void {
+    const body = { commentId: commentId, author: commentAuthor };
+    this.http.delete(this.COMMENT_BACKEND_URL + postId, { body }).subscribe();
+    //() => this.postsSocketService.emitDeleteCommentSocket(body)
+  }
+
+  pinPost(postId: string, postPinnedStatus: boolean): Observable<any> {
+    return this.http.put(this.BACKEND_URL, { id: postId, postPinnedStatus });
   }
 
   private observePostSocket() {

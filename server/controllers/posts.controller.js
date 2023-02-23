@@ -61,7 +61,7 @@ exports.updatePost = (req, res) => {
 exports.getPosts = (req, res) => {
     const pageSize = +req.query.pageSize;
     const currentPage = +req.query.page;
-    const postQuery = Post.find().sort({ isPinned: 1 }).populate('comments');
+    const postQuery = Post.find().sort({ isPinned: 'desc' }).populate('comments');
     let fetchedPosts;
     if (pageSize && currentPage) {
         postQuery.skip(pageSize * (currentPage - 1)).limit(pageSize);
@@ -135,25 +135,24 @@ exports.deletePost = (req, res) => {
         });
 }
 
-exports.pinPost = async (req, res) => {
-    try {
-        const post = await Post.findById({_id: req.body.id});
-        if (!post) {
+exports.pinPost = (req, res) => {
+        Post.findOneAndUpdate({_id: req.body.id}, {isPinned: req.body.postPinnedStatus}, { new: true }).then(pinnedPost => {
+            if (!pinnedPost) {
+                res.status(500).json({
+                    message: 'Invalid post'
+                });
+            }
+            res.status(201).json({
+                message: 'Post pinned successfully',
+                post: {
+                    ...pinnedPost,
+                    id: pinnedPost._id
+                }
+            })
+        }).catch(e => {
+            console.log(e)
             res.status(500).json({
-                message: 'Invalid post'
-            });
-        }
-        post.isPinned = true;
-
-        await post.save();
-
-        res.status(201).json({
-            message: 'Post pinned successfully',
-        })
-    } catch (e) {
-        console.log(e)
-        res.status(500).json({
-            message: 'Post pinning failed!'
-        })
-    }
+                message: 'Post pinning failed!'
+            })
+        });
 }

@@ -1,30 +1,29 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { Component, OnInit } from '@angular/core';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 
 import { AuthService } from '../authentication/services/auth.service';
 
+@UntilDestroy()
 @Component({
   selector: 'mean-header',
   templateUrl: 'header.component.html',
   styleUrls: ['header.component.scss'],
 })
-export class HeaderComponent implements OnInit, OnDestroy {
+export class HeaderComponent implements OnInit {
   userAuthenticated = false;
-  private authListenerSubs!: Subscription;
+
   constructor(private authService: AuthService) {}
 
   ngOnInit() {
-    this.userAuthenticated = this.authService.getIsAuth();
-    this.authListenerSubs = this.authService.getAuthStatusListener().subscribe(isAuthenticated => {
-      this.userAuthenticated = isAuthenticated;
-    });
+    this.authService
+      .getAuthStatusListener()
+      .pipe(untilDestroyed(this))
+      .subscribe(isAuthenticated => {
+        this.userAuthenticated = isAuthenticated;
+      });
   }
 
   onLogout() {
     this.authService.logout();
-  }
-
-  ngOnDestroy() {
-    this.authListenerSubs.unsubscribe();
   }
 }
