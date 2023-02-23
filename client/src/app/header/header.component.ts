@@ -11,6 +11,7 @@ import { AuthService } from '../authentication/services/auth.service';
 })
 export class HeaderComponent implements OnInit {
   userAuthenticated = false;
+  isAdmin = false;
 
   constructor(private authService: AuthService) {}
 
@@ -21,6 +22,7 @@ export class HeaderComponent implements OnInit {
       .subscribe(isAuthenticated => {
         this.userAuthenticated = isAuthenticated;
       });
+    this.authService.getUserRoles().subscribe(userRoles => (this.isAdmin = userRoles.includes('ADMIN')));
   }
 
   onLogout() {

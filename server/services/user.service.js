@@ -98,7 +98,11 @@ exports.refresh = async (refreshToken) => {
 
 exports.getAllUsers = async (currentUserId) => {
     const users = await User.find({ _id: { $ne: currentUserId } });
-    return users;
+    const updatedUsers = users.map((user) => {
+        const userDto = new UserDto(user);
+        return { ...userDto, username: user.username };
+    })
+    return updatedUsers;
 }
 
 exports.deleteUser = async (userId) => {

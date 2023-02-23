@@ -11,6 +11,15 @@ export class UsersService {
 
   constructor(private httpClient: HttpClient) {}
 
-  getPosts(postsPerPage: number, currentPage: number): Observable<User[]> {
-    return this.httpClient.get<User[]>(this.BACKEND_URL + 'users')
+  getUsers(): Observable<User[]> {
+    return this.httpClient.get<User[]>(this.BACKEND_URL + 'users');
+  }
+
+  banUser(userId: string): Observable<void> {
+    return this.httpClient.put<void>(this.BACKEND_URL + 'ban', { id: userId });
+  }
+
+  deleteUser(userId: string): Observable<void> {
+    return this.httpClient.delete<void>(this.BACKEND_URL + 'delete/' + userId);
+  }
 }

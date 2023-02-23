@@ -1,0 +1,54 @@
+<mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+  <!-- Email Column -->
+  <ng-container matColumnDef="email">
+    <mat-header-cell *matHeaderCellDef> Email </mat-header-cell>
+    <mat-cell *matCellDef="let user"> {{ user.email }} </mat-cell>
+  </ng-container>
+
+  <!-- Username Column -->
+  <ng-container matColumnDef="username">
+    <mat-header-cell *matHeaderCellDef> Username </mat-header-cell>
+    <mat-cell *matCellDef="let user"> {{ user.username }} </mat-cell>
+  </ng-container>
+
+  <!-- Activated Column -->
+  <ng-container matColumnDef="isActivated">
+    <mat-header-cell *matHeaderCellDef> Activated </mat-header-cell>
+    <mat-cell *matCellDef="let user">
+      <mat-icon>{{ user.isActivated ? 'check_circle' : 'cancel' }}</mat-icon>
+    </mat-cell>
+  </ng-container>
+
+  <!-- Banned Column -->
+  <ng-container matColumnDef="isBanned">
+    <mat-header-cell *matHeaderCellDef> Banned </mat-header-cell>
+    <mat-cell *matCellDef="let user">
+      <mat-icon>{{ user.isBanned ? 'check_circle' : 'cancel' }}</mat-icon>
+    </mat-cell>
+  </ng-container>
+
+  <!-- Roles Column -->
+  <ng-container matColumnDef="roles">
+    <mat-header-cell *matHeaderCellDef> Roles </mat-header-cell>
+    <mat-cell *matCellDef="let user"> {{ user.roles.join(', ') }} </mat-cell>
+  </ng-container>
+
+  <!-- Ban Column -->
+  <ng-container matColumnDef="ban">
+    <mat-header-cell *matHeaderCellDef> Ban </mat-header-cell>
+    <mat-cell *matCellDef="let user">
+      <button mat-button color="warn" [disabled]="user.isBanned" (click)="banUser(user)">Ban</button>
+    </mat-cell>
+  </ng-container>
+
+  <!-- Delete Column -->
+  <ng-container matColumnDef="delete">
+    <mat-header-cell *matHeaderCellDef> Delete </mat-header-cell>
+    <mat-cell *matCellDef="let user">
+      <button mat-button color="warn" (click)="deleteUser(user)">Delete</button>
+    </mat-cell>
+  </ng-container>
+
+  <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+  <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+</mat-table>

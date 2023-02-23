@@ -4,4 +4,5 @@ export interface User {
   isBanned: boolean;
   roles: string[];
   id: string;
+  username: string;
 }

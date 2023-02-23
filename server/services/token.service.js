@@ -2,8 +2,8 @@ const jwt = require("jsonwebtoken");
 const Token = require("../models/token.model");
 
 exports.generateTokens = (payload) => {
-    const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_KEY, {expiresIn: "30s"}); //TODO delete after testing, should be 30m or 1h
-    const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_KEY, {expiresIn: "1m"}); //TODO delete after testing, should be 30d
+    const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_KEY, {expiresIn: "30m"});
+    const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_KEY, {expiresIn: "30d"});
     return {
         accessToken,
         refreshToken
