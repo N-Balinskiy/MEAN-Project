@@ -113,8 +113,8 @@ exports.getPost = (req, res) => {
 exports.deletePost = (req, res) => {
     const filePath = `./images/${req.params.filename}`;
     let creator;
-    if (req.body.creator !== req.userData.userId && !req.userData.roles.includes('ADMIN')) {
-        creator = '';
+    if (req.body.creator !== req.userData.userId && req.userData.roles.includes('ADMIN')) {
+        creator = req.body.creator;
     } else {
         creator = req.userData.userId
     }

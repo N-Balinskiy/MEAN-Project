@@ -1,5 +1,6 @@
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { ActivatedRoute } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 
 import { AuthService } from './auth.service';
@@ -11,7 +12,15 @@ describe('AuthService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule, RouterTestingModule],
-      providers: [AuthService],
+      providers: [
+        AuthService,
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: { url: '/', params: { id: 'test-id' } },
+          },
+        },
+      ],
     });
 
     service = TestBed.inject(AuthService);
@@ -73,9 +82,9 @@ describe('AuthService', () => {
         user: { id: 'mock_user_id' },
       });
 
-      expect(service.getToken()).toEqual('mock_token');
-      expect(service.getIsAuth()).toBeTruthy();
-      expect(service.getUserId()).toEqual('mock_user_id');
+      expect(service.getToken().getValue()).toEqual('mock_token');
+      expect(service.getAuthStatusListener().getValue()).toBeTruthy();
+      expect(service.getUserId().getValue()).toEqual('mock_user_id');
     });
   });
 });

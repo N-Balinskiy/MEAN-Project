@@ -3,7 +3,8 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { of } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
+import { BehaviorSubject } from 'rxjs';
 
 import { AuthService } from '../services/auth.service';
 import { LoginComponent } from './login.component';
@@ -17,7 +18,15 @@ describe('LoginComponent', () => {
     TestBed.configureTestingModule({
       imports: [ReactiveFormsModule, NoopAnimationsModule, HttpClientModule],
       declarations: [LoginComponent],
-      providers: [AuthService],
+      providers: [
+        AuthService,
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: { url: '/', params: { id: 'test-id' } },
+          },
+        },
+      ],
     }).compileComponents();
   }));
 
@@ -26,7 +35,7 @@ describe('LoginComponent', () => {
     component = fixture.componentInstance;
     authService = TestBed.get(AuthService);
     spyOn(authService, 'login').and.returnValue();
-    spyOn(authService, 'getAuthStatusListener').and.returnValue(of());
+    spyOn(authService, 'getAuthStatusListener').and.returnValue(new BehaviorSubject(false));
     fixture.detectChanges();
   });
 

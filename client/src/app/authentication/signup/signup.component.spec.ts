@@ -1,7 +1,8 @@
 import { HttpClientModule } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
-import { Observable } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
+import { BehaviorSubject } from 'rxjs';
 
 import { AuthService } from '../services/auth.service';
 import { SignupComponent } from './signup.component';
@@ -15,14 +16,22 @@ describe('SignupComponent', () => {
     TestBed.configureTestingModule({
       imports: [ReactiveFormsModule, HttpClientModule],
       declarations: [SignupComponent],
-      providers: [AuthService],
+      providers: [
+        AuthService,
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: { url: '/', params: { id: 'test-id' } },
+          },
+        },
+      ],
     });
 
     fixture = TestBed.createComponent(SignupComponent);
     component = fixture.componentInstance;
     authService = TestBed.inject(AuthService);
     spyOn(authService, 'createUser').and.returnValue();
-    spyOn(authService, 'getAuthStatusListener').and.returnValue(new Observable());
+    spyOn(authService, 'getAuthStatusListener').and.returnValue(new BehaviorSubject(false));
   });
 
   it('should create', () => {
