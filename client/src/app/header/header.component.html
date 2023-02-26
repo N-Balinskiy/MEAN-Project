@@ -1,9 +1,15 @@
 <mat-toolbar color="primary">
-  <span><a routerLink=""> My app</a></span>
+  <span><a routerLink="posts">MEAN</a></span>
   <span class="spacer"></span>
   <ul>
     <li *ngIf="isAdmin">
       <a mat-button routerLink="admin/users" routerLinkActive="mat-accent">Admin Panel</a>
+    </li>
+    <li>
+      <a mat-button routerLink="contact" routerLinkActive="mat-accent">Contact Us</a>
+    </li>
+    <li>
+      <a mat-button routerLink="posts" routerLinkActive="mat-accent">Posts List</a>
     </li>
     <li *ngIf="userAuthenticated">
       <a mat-button routerLink="create" routerLinkActive="mat-accent">New Post</a>

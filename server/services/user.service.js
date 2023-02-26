@@ -130,7 +130,7 @@ exports.banUser = async (userId) => {
         ApiError.BadRequest("Can't find user");
     }
 
-    user.isBanned = true;
+    user.isBanned = !user.isBanned;
 
     await user.save();
 }

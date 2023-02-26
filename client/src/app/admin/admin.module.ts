@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterModule } from '@angular/router';
 import { SocketIoConfig, SocketIoModule } from 'ngx-socket-io';
 
@@ -30,6 +31,7 @@ const socketIoConfig: SocketIoConfig = {
     AdminRoutingModule,
     MatTableModule,
     MatIconModule,
+    MatTooltipModule,
   ],
   // providers: [PostsSocketService],
 })

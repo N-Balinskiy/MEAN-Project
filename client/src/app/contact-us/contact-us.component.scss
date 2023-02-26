@@ -1,0 +1,25 @@
+.rules {
+  h2 {
+    text-align: center;
+  }
+
+  background: #424242;
+  color: #fff;
+  padding: 24px 16px;
+
+  ul {
+    li {
+      padding: 5px;
+
+      span {
+        font-style: italic;
+        color: #c2185b;
+      }
+    }
+  }
+
+  p {
+    padding-top: 10px;
+    text-align: center;
+  }
+}

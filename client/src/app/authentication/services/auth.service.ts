@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
+import { PageLinks } from '../../shared/enums/page-links.enum';
 import { AuthData } from '../interfaces/auth-data.interface';
 import { AuthResponse } from '../interfaces/auth-response.interface';
 
@@ -82,7 +83,7 @@ export class AuthService {
       this.userId.next(null);
       this.userRoles.next([]);
       this.clearAuthData();
-      this.router.navigate(['/']);
+      this.router.navigate([PageLinks.PostsList]);
     });
   }
 
@@ -102,7 +103,9 @@ export class AuthService {
     this.userRoles.next(response.user.roles);
     this.authStatusListener.next(true);
     this.saveAuthData(response.accessToken, this.userId?.getValue() ?? '', this.userRoles?.getValue() ?? []);
-    this.router.navigate(this.activatedRoute.snapshot.url.length ? [this.activatedRoute.snapshot.url] : ['/']);
+    this.router.navigate(
+      this.activatedRoute.snapshot.url.length ? [this.activatedRoute.snapshot.url] : [PageLinks.PostsList]
+    );
   }
 
   private saveAuthData(token: string, userId: string, userRoles: string[]): void {

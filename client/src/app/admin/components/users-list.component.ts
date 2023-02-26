@@ -1,9 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { switchMap } from 'rxjs';
+import { EMPTY, switchMap } from 'rxjs';
 
 import { User } from '../../authentication/interfaces/user.interface';
+import { ConfirmDialogComponent } from '../../shared/components/dialog/dialog.component';
 import { UsersService } from '../services/users.service';
 
 @UntilDestroy()
@@ -11,6 +13,7 @@ import { UsersService } from '../services/users.service';
   selector: 'mean-users-list',
   templateUrl: 'users-list.component.html',
   styleUrls: ['users-list.component.scss'],
+  encapsulation: ViewEncapsulation.None,
 })
 export class UsersListComponent implements OnInit {
   users: User[] = [];
@@ -18,7 +21,7 @@ export class UsersListComponent implements OnInit {
   isLoading = false;
   displayedColumns: string[] = ['email', 'username', 'isActivated', 'isBanned', 'roles', 'ban', 'delete'];
 
-  constructor(private usersService: UsersService) {}
+  constructor(private usersService: UsersService, private dialog: MatDialog) {}
 
   ngOnInit(): void {
     this.getUsers();
@@ -28,7 +31,7 @@ export class UsersListComponent implements OnInit {
     this.usersService
       .getUsers()
       .pipe(untilDestroyed(this))
-      .subscribe(users => (console.log(users), (this.dataSource = new MatTableDataSource(users))));
+      .subscribe(users => (this.dataSource = new MatTableDataSource(users)));
   }
 
   banUser(user: User): void {
@@ -41,13 +44,23 @@ export class UsersListComponent implements OnInit {
       .subscribe(() => this.usersService.getUsers());
   }
 
-  deleteUser(user: User): void {
-    this.usersService
-      .deleteUser(user.id)
+  openConfirmDialog(user: User) {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: { message: 'Are you sure you want to delete this user?' },
+    });
+
+    dialogRef
+      .afterClosed()
       .pipe(
-        switchMap(() => this.usersService.getUsers()),
-        untilDestroyed(this)
+        untilDestroyed(this),
+        switchMap(result => {
+          if (result) {
+            return this.usersService.deleteUser(user.id);
+          }
+          return EMPTY;
+        })
       )
-      .subscribe(() => this.usersService.getUsers());
+      .subscribe(() => this.getUsers());
   }
 }

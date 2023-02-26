@@ -1,16 +1,17 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
+import { PageLinks } from '../shared/enums/page-links.enum';
 import { LoginComponent } from './login/login.component';
 import { SignupComponent } from './signup/signup.component';
 
 const routes: Routes = [
   {
-    path: 'login',
+    path: PageLinks.LoginPage,
     component: LoginComponent,
   },
   {
-    path: 'signup',
+    path: PageLinks.SignupPage,
     component: SignupComponent,
   },
 ];

@@ -51,13 +51,13 @@ export class PostCreateComponent implements OnInit {
       )
       .subscribe(postData => {
         this.isLoading = false;
-        if (!!this.postId) {
+        if (this.postId) {
           this.post = {
             id: postData._id,
             title: postData.title,
             content: postData.content,
             imagePath: postData.imagePath,
-            creator: postData.creator,
+            creator: { id: postData.creator._id, username: postData.creator.username },
             isPinned: postData.isPinned,
           };
           this.form?.setValue({

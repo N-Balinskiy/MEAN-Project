@@ -5,8 +5,12 @@ import { map, Observable, Subject } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../authentication/services/auth.service';
+import { PageLinks } from '../../shared/enums/page-links.enum';
+import { SnackBarService } from '../../shared/services/snackbar.service';
 import { Comment } from '../interfaces/comment.interface';
+import { PostResponse } from '../interfaces/post-response.interface';
 import { Post } from '../interfaces/post.interface';
+import { SuccessResponse } from '../interfaces/success-response.interface';
 import { PostsSocketService } from './posts-socket.service';
 
 @Injectable({ providedIn: 'root' })
@@ -23,7 +27,8 @@ export class PostsService {
     private http: HttpClient,
     private router: Router,
     private postsSocketService: PostsSocketService,
-    private authService: AuthService
+    private authService: AuthService,
+    private snackbar: SnackBarService
   ) {
     this.observePostSocket();
   }
@@ -33,17 +38,17 @@ export class PostsService {
     this.currentPostPage = currentPage;
     this.postsPerPage = postsPerPage;
     this.http
-      .get<{ message: string; posts: any; postsCount: number }>(this.BACKEND_URL + queryParams)
+      .get<{ message: string; posts: PostResponse[]; postsCount: number }>(this.BACKEND_URL + queryParams)
       .pipe(
         map(postData => {
           return {
-            posts: postData.posts.map((post: any) => {
+            posts: postData.posts.map((post: PostResponse) => {
               return {
                 title: post.title,
                 content: post.content,
                 id: post._id,
                 imagePath: post.imagePath,
-                creator: post.creator,
+                creator: { id: post.creator._id, username: post.creator.username },
                 isPinned: post.isPinned,
                 comments: post.comments,
               };
@@ -62,23 +67,8 @@ export class PostsService {
     return this.postsUpdated.asObservable();
   }
 
-  getPost(id: string): Observable<{
-    _id: string;
-    title: string;
-    content: string;
-    imagePath: string;
-    creator: string;
-    isPinned: boolean;
-  }> {
-    // TODO change this object to PostResponse interface
-    return this.http.get<{
-      _id: string;
-      title: string;
-      content: string;
-      imagePath: string;
-      creator: string;
-      isPinned: boolean;
-    }>(this.BACKEND_URL + id);
+  getPost(id: string): Observable<PostResponse> {
+    return this.http.get<PostResponse>(this.BACKEND_URL + id);
   }
 
   addPost(title: string, content: string, image: File): void {
@@ -86,8 +76,9 @@ export class PostsService {
     postData.append('title', title);
     postData.append('content', content);
     postData.append('image', image);
-    this.http.post<{ message: string; post: Post }>(this.BACKEND_URL, postData).subscribe(() => {
-      this.router.navigate(['/']);
+    this.http.post<{ message: string; post: Post }>(this.BACKEND_URL, postData).subscribe(response => {
+      this.snackbar.openSuccessSnackBar(response.message);
+      this.router.navigate([PageLinks.PostsList]);
       this.postsSocketService.emitCreatePostSocket(postData);
     });
   }
@@ -101,11 +92,12 @@ export class PostsService {
       postData.append('content', content);
       postData.append('image', image);
     } else {
-      postData = { id, title, content, imagePath: image, creator: '', isPinned: false };
+      postData = { id, title, content, imagePath: image, creator: { id: '', username: '' }, isPinned: false };
     }
 
-    this.http.put(this.BACKEND_URL + id, postData).subscribe(() => {
-      this.router.navigate(['/']);
+    this.http.put<SuccessResponse>(this.BACKEND_URL + id, postData).subscribe(response => {
+      this.snackbar.openSuccessSnackBar(response.message);
+      this.router.navigate([PageLinks.PostsList]);
       this.postsSocketService.emitUpdatePostSocket(postData);
     });
   }
@@ -113,13 +105,22 @@ export class PostsService {
   deletePost(postId: string): void {
     let postData: Post | null = this.posts.find(post => post.id == postId) ?? null;
     this.http
-      .delete(this.BACKEND_URL + postId + `${postData?.imagePath.replace('http://localhost:3000/images', '')}`)
-      .subscribe(() => this.postsSocketService.emitDeletePostSocket(postData));
+      .delete<SuccessResponse>(
+        this.BACKEND_URL + postId + `${postData?.imagePath.replace('http://localhost:3000/images', '')}`,
+        {
+          body: { creator: postData?.creator.id },
+        }
+      )
+      .subscribe(response => {
+        this.snackbar.openSuccessSnackBar(response.message);
+        this.postsSocketService.emitDeletePostSocket(postData);
+      });
   }
 
   addComment(postId: string, comment: string): void {
     let postData: Post | null = this.posts.find(post => post.id == postId) ?? null;
-    this.http.post(this.COMMENT_BACKEND_URL + postId, { text: comment }).subscribe(() => {
+    this.http.post<SuccessResponse>(this.COMMENT_BACKEND_URL + postId, { text: comment }).subscribe(response => {
+      this.snackbar.openSuccessSnackBar(response.message);
       this.getPosts(this.postsPerPage, this.currentPostPage);
       this.postsSocketService.emitDeletePostSocket(postData);
     });
@@ -129,14 +130,18 @@ export class PostsService {
     const body = { commentId: comment._id, author: comment.author };
     let commentData: Comment | null =
       this.posts.find(post => post.id == postId)?.comments?.find(com => com._id == comment._id) ?? null;
-    this.http.delete(this.COMMENT_BACKEND_URL + postId, { body }).subscribe(() => {
+    this.http.delete<SuccessResponse>(this.COMMENT_BACKEND_URL + postId, { body }).subscribe(response => {
+      this.snackbar.openSuccessSnackBar(response.message);
       this.postsSocketService.emitDeleteCommentSocket(commentData);
       this.getPosts(this.postsPerPage, this.currentPostPage);
     });
   }
 
-  pinPost(postId: string, postPinnedStatus: boolean): Observable<any> {
-    return this.http.put(this.BACKEND_URL, { id: postId, postPinnedStatus });
+  pinPost(postId: string, postPinnedStatus: boolean): void {
+    this.http.put<SuccessResponse>(this.BACKEND_URL, { id: postId, postPinnedStatus }).subscribe(response => {
+      this.snackbar.openSuccessSnackBar(response.message);
+      this.getPosts(this.postsPerPage, this.currentPostPage);
+    });
   }
 
   private observePostSocket() {

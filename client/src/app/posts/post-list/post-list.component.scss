@@ -31,7 +31,24 @@ mat-form-field {
 
 .comment-info {
   display: flex;
-  justify-content: space-between;
+  align-items: center;
+}
+
+.username {
+  color: #c2185b;
+  margin-right: auto;
+}
+
+.comment-author {
+  color: #c2185b;
+}
+
+.comment-text {
+  margin: 0 auto 0 10px;
+}
+
+mat-action-row {
+  align-items: center;
 }
 
 .post-header {
@@ -43,4 +60,16 @@ mat-form-field {
      min-width: 75px;
      color: antiquewhite;
    }
+}
+
+button[type=submit] {
+  margin-top: 5px;
+}
+
+form {
+  margin-top: 5px;
+}
+
+.mat-icon {
+  cursor: pointer;
 }

@@ -3,5 +3,5 @@ export interface Comment {
   postId: string;
   date: string;
   text: string;
-  author: string;
+  author: { username: string; _id: string };
 }

@@ -1,9 +1,11 @@
 import { Component, OnInit } from '@angular/core';
-import { FormControl, FormGroup } from '@angular/forms';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { MatDialog } from '@angular/material/dialog';
 import { PageEvent } from '@angular/material/paginator';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 
 import { AuthService } from '../../authentication/services/auth.service';
+import { ConfirmDialogComponent } from '../../shared/components/dialog/dialog.component';
 import { Comment } from '../interfaces/comment.interface';
 import { Post } from '../interfaces/post.interface';
 import { PostsService } from '../services/posts.service';
@@ -27,7 +29,7 @@ export class PostListComponent implements OnInit {
   commentsButton: string = 'Show Comments';
   form: Nullable<FormGroup> = null;
 
-  constructor(private postsService: PostsService, private authService: AuthService) {}
+  constructor(private postsService: PostsService, private authService: AuthService, private dialog: MatDialog) {}
 
   ngOnInit() {
     this.isLoading = true;
@@ -52,11 +54,6 @@ export class PostListComponent implements OnInit {
     this.initFormGroup();
   }
 
-  onDeletePost(postId: string): void {
-    this.postsService.deletePost(postId);
-    this.postsService.getPosts(this.postsPerPage, this.currentPage);
-  }
-
   onChangedPage(pageData: PageEvent) {
     this.isLoading = true;
     this.currentPage = pageData.pageIndex + 1;
@@ -74,9 +71,7 @@ export class PostListComponent implements OnInit {
 
   pinPost(e: Event, postId: string, postPinnedStatus: boolean): void {
     e.stopPropagation();
-    this.postsService
-      .pinPost(postId, !postPinnedStatus)
-      .subscribe(() => this.postsService.getPosts(this.postsPerPage, this.currentPage));
+    this.postsService.pinPost(postId, !postPinnedStatus);
   }
 
   onSaveComment(post: Post) {
@@ -93,7 +88,21 @@ export class PostListComponent implements OnInit {
 
   private initFormGroup(): void {
     this.form = new FormGroup({
-      comment: new FormControl(null),
+      comment: new FormControl(null, [Validators.maxLength(50)]),
+    });
+  }
+
+  openConfirmDialog(postId: string) {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: { message: 'Are you sure you want to delete this post?' },
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.postsService.deletePost(postId);
+        this.postsService.getPosts(this.postsPerPage, this.currentPage);
+      }
     });
   }
 }

@@ -3,22 +3,28 @@ import { RouterModule, Routes } from '@angular/router';
 
 import { RoleGuard } from './admin/guards/role-guard';
 import { AuthGuard } from './authentication/guards/auth-guard';
+import { ContactUsComponent } from './contact-us/contact-us.component';
 import { PostCreateComponent } from './posts/post-create/post-create.component';
 import { PostListComponent } from './posts/post-list/post-list.component';
+import { PageLinks } from './shared/enums/page-links.enum';
 
 const routes: Routes = [
   {
-    path: '',
+    path: PageLinks.PostsList,
     component: PostListComponent,
     pathMatch: 'full',
   },
   {
-    path: 'create',
+    path: PageLinks.ContactUs,
+    component: ContactUsComponent,
+  },
+  {
+    path: PageLinks.CreatePost,
     component: PostCreateComponent,
     canActivate: [AuthGuard],
   },
   {
-    path: 'edit/:postId',
+    path: PageLinks.EditPost + '/:postId',
     component: PostCreateComponent,
     canActivate: [AuthGuard],
   },

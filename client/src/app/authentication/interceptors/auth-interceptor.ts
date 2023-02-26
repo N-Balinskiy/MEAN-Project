@@ -5,6 +5,7 @@ import { BehaviorSubject, Observable, switchMap, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
 import { ErrorComponent } from '../../shared/components/error/error.component';
+import { SnackBarService } from '../../shared/services/snackbar.service';
 import { AuthResponse } from '../interfaces/auth-response.interface';
 import { AuthService } from '../services/auth.service';
 
@@ -13,7 +14,7 @@ export class AuthInterceptor implements HttpInterceptor {
   private isRefreshing = false;
   private refreshTokenSubject: BehaviorSubject<any> = new BehaviorSubject<any>(null);
 
-  constructor(private dialog: MatDialog, private authService: AuthService) {}
+  constructor(private dialog: MatDialog, private authService: AuthService, private snackbar: SnackBarService) {}
 
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     request = this.addAuthorizationHeader(request);
@@ -28,7 +29,7 @@ export class AuthInterceptor implements HttpInterceptor {
           return throwError(() => error);
         } else {
           let errorMessage = error.error.message || 'An unknown error occurred!';
-          this.dialog.open(ErrorComponent, { data: { message: errorMessage } });
+          this.snackbar.openErrorSnackBar(errorMessage);
           return throwError(() => error);
         }
       })

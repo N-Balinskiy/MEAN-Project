@@ -1,11 +1,11 @@
 import { Comment } from './comment.interface';
 
-export interface Post {
+export interface PostResponse {
+  _id: string;
   title: string;
   content: string;
-  id: string;
   imagePath: string;
-  creator: { id: string; username: string };
+  creator: { _id: string; username: string };
   isPinned: boolean;
-  comments?: Comment[];
+  comments: Comment[];
 }

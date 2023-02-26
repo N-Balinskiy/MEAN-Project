@@ -50,7 +50,7 @@ exports.updatePost = (req, res) => {
     Post.updateOne({_id: req.params.id, creator: req.userData.userId}, post).then(result => {
         if (result.matchedCount > 0) {
             res.status(200).json({
-                message: 'Update successful',
+                message: 'Post updated successful',
             });
         } else {
             res.status(401).json({
@@ -69,7 +69,10 @@ exports.updatePost = (req, res) => {
 exports.getPosts = (req, res) => {
     const pageSize = +req.query.pageSize;
     const currentPage = +req.query.page;
-    const postQuery = Post.find().sort({ isPinned: 'desc' }).populate('comments');
+    const postQuery = Post.find().sort({ isPinned: 'desc' }).populate('comments').populate({
+        path: 'comments',
+        populate: { path: 'author', select: 'username' }
+    }).populate('creator', 'username');
     let fetchedPosts;
     if (pageSize && currentPage) {
         postQuery.skip(pageSize * (currentPage - 1)).limit(pageSize);
@@ -128,7 +131,7 @@ exports.deletePost = (req, res) => {
                     });
                 }
             });
-            res.status(200).json({message: 'Post deleted'})
+            res.status(200).json({message: 'Post deleted successfully'})
         } else {
             res.status(401).json({
                 message: 'Not authorized!',
@@ -136,7 +139,7 @@ exports.deletePost = (req, res) => {
         }
     })
         .catch(e => {
-            console.log(e);
+            console.log(e)
             res.status(500).json({
                 message: 'Deleting post failed!'
             })

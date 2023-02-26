@@ -20,7 +20,7 @@ exports.addComment = async (req, res) => {
 
         await post.save();
         res.status(201).json({
-            message: 'Post commented successfully',
+            message: 'Comment added successfully',
         });
     } catch (e) {
         console.log(e)
@@ -35,7 +35,7 @@ exports.deleteComment = async (req, res) => {
         let author;
         console.log(req.body)
         if (req.body.author !== req.userData.userId && !req.userData.roles.includes('ADMIN')) {
-            author = '';
+            author = req.body.author;
         } else {
             author = req.userData.userId
         }

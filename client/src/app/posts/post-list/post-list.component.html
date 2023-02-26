@@ -14,37 +14,36 @@
     </div>
     <p>{{ post.content }}</p>
     <mat-action-row>
+      <p class="username">{{ '@' + post.creator.username }}</p>
       <a
-        *ngIf="userAuthenticated && userId === post.creator"
+        *ngIf="userAuthenticated && userId === post.creator.id"
         mat-button
         color="primary"
         [routerLink]="['/edit', post.id]"
         >EDIT</a
       >
       <button
-        *ngIf="(userAuthenticated && userId === post.creator) || isAdmin"
+        *ngIf="(userAuthenticated && userId === post.creator.id) || isAdmin"
         mat-button
         color="warn"
-        (click)="onDeletePost(post.id)">
+        (click)="openConfirmDialog(post.id)">
         DELETE
       </button>
     </mat-action-row>
     <mat-expansion-panel *ngIf="userAuthenticated" [expanded]="true" (opened)="onOpenPanel()" (closed)="onClosePanel()">
       <mat-expansion-panel-header>{{ commentsButton }}</mat-expansion-panel-header>
       <div class="comment-info" *ngFor="let comment of post?.comments || []">
-        <p>{{ comment.text }}</p>
-        <button
-          mat-button
-          color="warn"
-          *ngIf="userId === comment.author || isAdmin"
-          (click)="onDeleteComment(post.id, comment)">
-          Delete
-        </button>
+        <p class="comment-author">{{ '@' + comment.author.username }}</p>
+        <p class="comment-text">{{ comment.text }}</p>
+        <mat-icon *ngIf="userId === comment.author._id || isAdmin" (click)="onDeleteComment(post.id, comment)">
+          {{ 'delete' }}</mat-icon
+        >
       </div>
       <div>
         <form [formGroup]="form" (submit)="onSaveComment(post)" *ngIf="form">
           <mat-form-field>
             <input matInput type="text" placeholder="Your comment" formControlName="comment" />
+            <mat-error *ngIf="form?.get('comment')?.invalid">Maximum length is 20</mat-error>
           </mat-form-field>
           <button mat-raised-button color="primary" type="submit">Add Comment</button>
         </form>
